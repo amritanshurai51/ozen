@@ -1,0 +1,11 @@
+.env
+static/dist
+__pycache__
+.env/
+/app/services/.env
+/static/.env
+*.pyc
+*.pyo
+node_modules
+static/node_modules
+.DS_Store

@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OZEN — Beta</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #222;
+      background: #fff;
+    }
+
+    /* ---- Disclaimer ---- */
+    #disclaimer-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #fff; z-index: 1000; overflow-y: auto; padding: 24px;
+    }
+    #disclaimer-overlay h1 { font-size: 20px; margin-bottom: 16px; }
+    #disclaimer-overlay h2 { font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
+    #disclaimer-overlay p, #disclaimer-overlay li { font-size: 14px; margin-bottom: 8px; }
+    #disclaimer-overlay ul { padding-left: 20px; margin-bottom: 12px; }
+    .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin: 14px 0; }
+    .checkbox-row input[type="checkbox"] { margin-top: 4px; width: 18px; height: 18px; flex-shrink: 0; }
+    .checkbox-row label { font-size: 14px; }
+    #consent-btn {
+      margin-top: 20px; padding: 12px 24px; font-size: 16px;
+      background: #222; color: #fff; border: none; border-radius: 4px;
+      width: 100%; cursor: pointer; opacity: 0.4; pointer-events: none;
+    }
+    #consent-btn.active { opacity: 1; pointer-events: auto; }
+
+    /* ---- Pages ---- */
+    .page { display: none; }
+    .page.visible { display: block; }
+
+    /* ---- Progress bar ---- */
+    .progress-bar { margin-bottom: 20px; }
+    .progress-track { height: 3px; background: #e0e0e0; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #222; border-radius: 2px; transition: width 0.3s ease; }
+    .progress-label { font-size: 12px; color: #999; margin-top: 6px; }
+
+    /* ---- Page header ---- */
+    .page-title { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .page-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+
+    /* ---- Form fields ---- */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .field-hint { font-size: 12px; color: #777; margin-bottom: 4px; }
+    .field input, .field select {
+      width: 100%; padding: 10px; font-size: 16px;
+      border: 1px solid #ccc; border-radius: 4px;
+      -webkit-appearance: none; background: #fff;
+    }
+    .field input:focus, .field select:focus { outline: none; border-color: #222; }
+    .field-error { font-size: 12px; color: #c44; margin-top: 4px; display: none; }
+
+    /* ---- Option cards (single select) ---- */
+    .option-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .option-card {
+      padding: 12px 14px; border: 1px solid #ddd; border-radius: 6px;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .option-card:active { background: #f5f5f5; }
+    .option-card.selected { border-color: #222; background: #222; }
+    .option-card.selected .option-label { color: #fff; }
+    .option-card.selected .option-sub { color: rgba(255,255,255,0.6); }
+    .option-card .option-label { font-size: 14px; font-weight: 500; }
+    .option-card .option-sub { font-size: 12px; color: #888; margin-top: 2px; }
+
+    /* ---- Chip select (multi or single inline) ---- */
+    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .chip {
+      padding: 8px 14px; border: 1px solid #ddd; border-radius: 20px;
+      font-size: 13px; cursor: pointer; transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent; background: #fff;
+    }
+    .chip:active { background: #f0f0f0; }
+    .chip.selected { border-color: #222; background: #222; color: #fff; }
+    /* ---- Photo upload grid ---- */
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .photo-box {
+      aspect-ratio: 3/4; border: 1.5px dashed #ccc; border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .photo-box:active { background: #fafafa; }
+    .photo-box.has-photo { border-style: solid; border-color: #222; }
+    .photo-box input[type="file"] {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer;
+    }
+    .photo-box .photo-icon { font-size: 24px; opacity: 0.3; margin-bottom: 4px; }
+    .photo-box .photo-label { font-size: 13px; font-weight: 500; color: #666; }
+    .photo-box .photo-angle { font-size: 11px; color: #aaa; }
+    .photo-box img {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+
+    /* ---- Sleep display ---- */
+    .sleep-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .sleep-row .field { flex: 1; }
+    .sleep-calc {
+      padding: 10px 14px; background: #f5f5f5; border-radius: 6px;
+      font-size: 13px; color: #555; text-align: center; margin-bottom: 16px;
+    }
+
+    /* ---- Navigation ---- */
+    .nav-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee;
+    }
+    .btn-back {
+      background: none; border: none; font-size: 14px; color: #888;
+      cursor: pointer; padding: 10px 0;
+    }
+    .btn-next, .btn-analyze {
+      padding: 12px 28px; font-size: 14px; font-weight: 600;
+      background: #222; color: #fff; border: none; border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-next:disabled, .btn-analyze:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ---- Results ---- */
+    #results-content { margin-bottom: 20px; }
+    .result-section { margin-bottom: 20px; }
+    .result-section-title {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: #222; margin-bottom: 8px;
+      padding-bottom: 6px; border-bottom: 2px solid #222;
+    }
+    .result-observation {
+      font-size: 14px; line-height: 1.7; color: #333;
+      margin-bottom: 6px;
+    }
+    .result-suggestion {
+      font-size: 14px; line-height: 1.7; color: #555;
+      padding: 10px 14px; background: #f5f5f5; border-radius: 6px;
+      border-left: 3px solid #222;
+    }
+    .result-disclaimer {
+      font-size: 13px; font-weight: 700; line-height: 1.6;
+      text-transform: uppercase; letter-spacing: 0.03em;
+      color: #7a5a00; background: #fff3cd; border: 1px solid #ffcc02;
+      padding: 14px 16px; border-radius: 6px; margin: 20px 0;
+    }
+    #back-btn {
+      padding: 12px; font-size: 15px;
+      background: #555; color: #fff; border: none; border-radius: 4px;
+      width: 100%; cursor: pointer;
+    }
+    #status { margin-top: 12px; font-size: 14px; color: #555; }
+    .loading-box { text-align: center; padding: 40px 20px; }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid #eee;
+      border-top-color: #222; border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: #555; }
+    #scans-left {
+      font-size: 13px; color: #555; margin-bottom: 16px;
+      padding: 8px; background: #f0f0f0; border-radius: 4px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========== DISCLAIMER ========== -->
+<div id="disclaimer-overlay">
+  <h1>&#9888;&#65039; Disclaimer &amp; Consent</h1>
+
+  <h2>1. Beta Software</h2>
+  <p>This application is currently <strong>under development</strong>. It may contain bugs, errors, or unexpected behaviour. Use it at your own discretion.</p>
+
+  <h2>2. How Your Data Is Processed</h2>
+  <p>We want to be fully transparent about what happens with your data:</p>
+  <ul>
+    <li><strong>Analysis (Anthropic):</strong> Your input data and images are sent to Anthropic's Claude models for generating your personalised lifestyle analysis. This data is processed on Anthropic's servers, which may be located in any region globally.</li>
+    <li><strong>No Personal Storage:</strong> We do not store your personal information, images, or analysis results on our servers beyond what is needed to process your request.</li>
+  </ul>
+
+  <h2>3. Limited Beta Testing</h2>
+  <p>This app is being shared with a small, private circle of approximately 20–30 people for the sole purpose of gathering feedback. It is not a publicly released product.</p>
+
+  <h2>4. Consent</h2>
+  <p>By proceeding, you acknowledge and consent to the following:</p>
+  <ul>
+    <li>Your images and input data will be processed by Anthropic's servers.</li>
+    <li>This is beta software and may not work as expected.</li>
+    <li>You are voluntarily participating in a private development test.</li>
+  </ul>
+
+  <div class="checkbox-row">
+    <input type="checkbox" id="consent-check">
+    <label for="consent-check">I have read and understood the above, and I consent to my data being processed as described.</label>
+  </div>
+
+  <div class="checkbox-row">
+    <input type="checkbox" id="age-check">
+    <label for="age-check">I confirm that I am <strong>18 years of age or older</strong>.</label>
+  </div>
+
+  <button id="consent-btn">Continue to App</button>
+</div>
+
+
+<!-- ========== QUIZ PAGES ========== -->
+
+<!-- Page 1: Age, Gender, Ethnicity -->
+<div id="page-1" class="page">
+  <div class="progress-bar">
+    <div class="progress-track"><div class="progress-fill" style="width:14.28%"></div></div>
+    <div class="progress-label">1 of 7</div>
+  </div>
+  <div id="scans-left"></div>
+  <div class="page-title">About you</div>
+  <div class="page-sub">Age, gender, and ethnicity shape every recommendation.</div>
+
+  <div class="field">
+    <label for="age">Age</label>
+    <div class="field-hint">Between 18 and 50</div>
+    <input type="number" id="age" placeholder="e.g. 25" min="18" max="50" inputmode="numeric">
+    <div class="field-error" id="age-error"></div>
+  </div>
+
+  <div class="field">
+    <label>Gender</label>
+    <div class="chip-group" id="gender-group">
+      <div class="chip" data-value="m">Male</div>
+      <div class="chip" data-value="f">Female</div>
+    </div>
+    <input type="hidden" id="gender" value="">
+    <div class="field-error" id="gender-error"></div>
+  </div>
+
+  <div class="field">
+    <label for="ethnicity">Ethnicity</label>
+    <select id="ethnicity">
+      <option value="" disabled selected>Select</option>
+      <option value="south_asian">Indian / South Asian</option>
+      <option value="arab_khaleeji">Arab / Khaleeji</option>
+      <option value="east_asian">East Asian</option>
+      <option value="other">Other</option>
+    </select>
+    <div class="field-error" id="ethnicity-error"></div>
+  </div>
+
+  <div class="nav-row">
+    <div></div>
+    <button class="btn-next" id="next-1">Continue</button>
+  </div>
+</div>
+
+
+<!-- Page 2: City, Primary Goal -->
+<div id="page-2" class="page">
+  <div class="progress-bar">
+    <div class="progress-track"><div class="progress-fill" style="width:28.56%"></div></div>
+    <div class="progress-label">2 of 7</div>
+  </div>
+  <div class="page-title">Location &amp; goal</div>
+  <div class="page-sub">Your climate changes your skincare. Your goal focuses the plan.</div>
+
+  <div class="field">
+    <label for="city">City / Climate Zone</label>
+    <select id="city">
+      <option value="" disabled selected>Select your city</option>
+      <optgroup label="India">
+        <option value="mumbai">Mumbai</option>
+        <option value="delhi">Delhi</option>
+        <option value="bangalore">Bangalore</option>
+        <option value="hyderabad">Hyderabad</option>
+        <option value="chennai">Chennai</option>
+        <option value="pune">Pune</option>
+        <option value="kolkata">Kolkata</option>
+        <option value="ahmedabad">Ahmedabad</option>
+      </optgroup>
+      <optgroup label="GCC">
+        <option value="dubai">Dubai</option>
+        <option value="abu_dhabi">Abu Dhabi</option>
+        <option value="sharjah">Sharjah</option>
+        <option value="riyadh">Riyadh</option>
+        <option value="doha">Doha</option>
+        <option value="kuwait_city">Kuwait City</option>
+      </optgroup>
+      <option value="other">Other</option>
+    </select>
+    <div class="field-error" id="city-error"></div>
+  </div>
+
+  <div class="field">
+    <label>Primary Goal <span style="font-weight:normal;color:#888;">(pick up to 2)</span></label>
+    <div class="option-group" id="goal-group">
+      <div class="option-card" data-value="attract">
+        <div class="option-label">Look more attractive to a specific person</div>
+      </div>
+      <div class="option-card" data-value="career">
+        <div class="option-label">Career &amp; professional presence</div>
+      </div>
+      <div class="option-card" data-value="event">
+        <div class="option-label">Wedding or event in next 90 days</div>
+      </div>
+      <div class="option-card" data-value="glowup">
+        <div class="option-label">General glow-up</div>
+      </div>
+      <div class="option-card" data-value="fix">
+        <div class="option-label">Fix a specific insecurity</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#999;margin-top:-4px;margin-bottom:8px;" id="goal-count">0/2 selected</div>
+    <input type="hidden" id="primary_goal" value="">
+    <div class="field-error" id="primary_goal-error"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-back" id="back-2">&larr; Back</button>
+    <button class="btn-next" id="next-2">Continue</button>
+  </div>
+</div>
+
+
+<!-- Page 3: Skincare Routine + Issues -->
+<div id="page-3" class="page">
+  <div class="progress-bar">
+    <div class="progress-track"><div class="progress-fill" style="width:42.84%"></div></div>
+    <div class="progress-label">3 of 7</div>
+  </div>
+  <div class="page-title">Your skin right now</div>
+  <div class="page-sub">Current routine + what's bothering you. So we don't over- or under-prescribe.</div>
+
+  <div class="field">
+    <label>Current Skincare Routine</label>
+    <div class="option-group" id="routine-group">
+      <div class="option-card" data-value="none">
+        <div class="option-label">None at all</div>
+        <div class="option-sub">Just water, maybe</div>
+      </div>
+      <div class="option-card" data-value="basic">
+        <div class="option-label">Basic cleanser only</div>
+        <div class="option-sub">Face wash and done</div>
+      </div>
+      <div class="option-card" data-value="three_step">
+        <div class="option-label">3-step routine</div>
+        <div class="option-sub">Cleanser + moisturiser + SPF</div>
+      </div>
+      <div class="option-card" data-value="five_plus">
+        <div class="option-label">5+ step routine</div>
+        <div class="option-sub">Serums, actives, the works</div>
+      </div>
+    </div>
+    <input type="hidden" id="skincare_routine" value="">
+    <div class="field-error" id="skincare_routine-error"></div>
+  </div>
+
+  <div class="field">
+    <label>Active Skin Issues <span style="font-weight:normal;color:#888;">(select all that apply)</span></label>
+    <div class="chip-group" id="skin-issues-group">
+      <div class="chip" data-value="acne">Acne</div>
+      <div class="chip" data-value="pigmentation">Pigmentation</div>
+      <div class="chip" data-value="dullness">Dullness</div>
+      <div class="chip" data-value="oiliness">Oiliness</div>
+      <div class="chip" data-value="dryness">Dryness</div>
+      <div class="chip" data-value="none">None</div>
+    </div>
+    <input type="hidden" id="skin_issues" value="">
+    <div class="field-error" id="skin_issues-error"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-back" id="back-3">&larr; Back</button>
+    <button class="btn-next" id="next-3">Continue</button>
+  </div>
+</div>
+
+
+<!-- Page 4: Body Type, Height, Weight -->
+<div id="page-4" class="page">
+  <div class="progress-bar">
+    <div class="progress-track"><div class="progress-fill" style="width:57.12%"></div></div>
+    <div class="progress-label">4 of 7</div>
+  </div>
+  <div class="page-title">Your build</div>
+  <div class="page-sub">Body type + height + weight drive outfit and proportion guidance.</div>
+
+  <div class="field">
+    <label>Body Type</label>
+    <div class="option-group" id="bodytype-group">
+      <div class="option-card" data-value="slim"><div class="option-label">Slim</div></div>
+      <div class="option-card" data-value="average"><div class="option-label">Average</div></div>
+      <div class="option-card" data-value="athletic"><div class="option-label">Athletic</div></div>
+      <div class="option-card" data-value="soft_overweight"><div class="option-label">Soft / Overweight</div></div>
+      <div class="option-card" data-value="muscular"><div class="option-label">Muscular</div></div>
+    </div>
+    <input type="hidden" id="body_type" value="">
+    <div class="field-error" id="body_type-error"></div>
+  </div>
+
+  <div class="field">
+    <label for="height">Height (cm)</label>
+    <div class="field-hint">Between 120 and 230 cm</div>
+    <input type="number" id="height" placeholder="e.g. 175" min="120" max="230" inputmode="numeric">
+    <div class="field-error" id="height-error"></div>
+  </div>
+
+  <div class="field">
+    <label for="weight">Weight (kg)</label>
+    <div class="field-hint">Between 30 and 200 kg</div>
+    <input type="number" id="weight" placeholder="e.g. 70" min="30" max="200" inputmode="numeric">
+    <div class="field-error" id="weight-error"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-back" id="back-4">&larr; Back</button>
+    <button class="btn-next" id="next-4">Continue</button>
+  </div>
+</div>
+
+
+<!-- Page 5: Style + Budget -->
+<div id="page-5" class="page">
+  <div class="progress-bar">
+    <div class="progress-track"><div class="progress-fill" style="width:71.4%"></div></div>
+    <div class="progress-label">5 of 7</div>
+  </div>
+  <div class="page-title">Style &amp; budget</div>
+  <div class="page-sub">Your aesthetic target + what you're willing to spend monthly.</div>
+
+  <div class="field">
+    <label>Style Direction <span style="font-weight:normal;color:#888;">(pick up to 2)</span></label>
+    <div class="chip-group" id="style-group">
+      <div class="chip" data-value="minimal">Minimal / Clean</div>
+      <div class="chip" data-value="streetwear">Streetwear</div>
+      <div class="chip" data-value="formal">Formal / Sharp</div>
+      <div class="chip" data-value="old_money">Old Money</div>
+      <div class="chip" data-value="rugged">Rugged / Masculine</div>
+      <div class="chip" data-value="soft">Soft / Approachable</div>
+    </div>
+    <div style="font-size:12px;color:#999;margin-top:-10px;margin-bottom:12px;" id="style-count">0/2 selected</div>
+    <input type="hidden" id="style_type" value="">
+    <div class="field-error" id="style_type-error"></div>
+  </div>
+
+  <div class="field">
+    <label>Currency</label>
+    <div class="chip-group" id="currency-group">
+      <div class="chip selected" data-value="inr">₹ INR</div>
+      <div class="chip" data-value="aed">AED</div>
+    </div>
+    <input type="hidden" id="currency" value="inr">
+  </div>
+
+  <div class="field">
+    <label>Monthly Budget for Grooming / Skincare / Style</label>
+    <div class="option-group" id="budget-group-inr">
+      <div class="option-card" data-value="under_3000_inr">
+        <div class="option-label">Under ₹3,000</div>
+        <div class="option-sub">Drugstore essentials</div>
+      </div>
+      <div class="option-card" data-value="3000_8000_inr">
+        <div class="option-label">₹3,000 – 8,000</div>
+        <div class="option-sub">Quality basics</div>
+      </div>
+      <div class="option-card" data-value="8000_25000_inr">
+        <div class="option-label">₹8,000 – 25,000</div>
+        <div class="option-sub">Premium range</div>
+      </div>
+      <div class="option-card" data-value="25000_plus_inr">
+        <div class="option-label">₹25,000+</div>
+        <div class="option-sub">No limit</div>
+      </div>
+    </div>
+    <div class="option-group" id="budget-group-aed" style="display:none;">
+      <div class="option-card" data-value="under_200_aed">
+        <div class="option-label">Under AED 200</div>
+        <div class="option-sub">Drugstore essentials</div>
+      </div>
+      <div class="option-card" data-value="200_500_aed">
+        <div class="option-label">AED 200 – 500</div>
+        <div class="option-sub">Quality basics</div>
+      </div>
+      <div class="option-card" data-value="500_1500_aed">
+        <div class="option-label">AED 500 – 1,500</div>
+        <div class="option-sub">Premium range</div>
+      </div>
+      <div class="option-card" data-value="1500_plus_aed">
+        <div class="option-label">AED 1,500+</div>
+        <div class="option-sub">No limit</div>
+      </div>
+    </div>
+    <input type="hidden" id="monthly_budget" value="">
+    <div class="field-error" id="monthly_budget-error"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-back" id="back-5">&larr; Back</button>
+    <button class="btn-next" id="next-5">Continue</button>
+  </div>
+</div>
+
+
+<!-- Page 6: Gym + Sleep -->
+<div id="page-6" class="page">
+  <div class="progress-bar">
+    <div class="progress-track"><div class="progress-fill" style="width:85.68%"></div></div>
+    <div class="progress-label">6 of 7</div>
+  </div>
+  <div class="page-title">Fitness &amp; sleep</div>
+  <div class="page-sub">Training frequency and sleep schedule shape timelines and skin quality.</div>
+
+  <div class="field">
+    <label>Gym / Fitness Frequency</label>
+    <div class="option-group" id="fitness-group">
+      <div class="option-card" data-value="not_training">
+        <div class="option-label">Not training</div>
+        <div class="option-sub">No gym currently</div>
+      </div>
+      <div class="option-card" data-value="1_2_per_week">
+        <div class="option-label">1–2× per week</div>
+        <div class="option-sub">Getting started</div>
+      </div>
+      <div class="option-card" data-value="3_4_per_week">
+        <div class="option-label">3–4× per week</div>
+        <div class="option-sub">Consistent</div>
+      </div>
+      <div class="option-card" data-value="5_plus">
+        <div class="option-label">5+ days</div>
+        <div class="option-sub">Serious commitment</div>
+      </div>
+    </div>
+    <input type="hidden" id="gym_fitness" value="">
+    <div class="field-error" id="gym_fitness-error"></div>
+  </div>
+
+  <div class="field">
+    <label>Sleep Schedule</label>
+    <div class="sleep-row">
+      <div class="field">
+        <label for="sleep_bed" style="font-size:13px;font-weight:normal;">🌙 Bedtime</label>
+        <input type="time" id="sleep_bed" value="23:00">
+      </div>
+      <div class="field">
+        <label for="sleep_wake" style="font-size:13px;font-weight:normal;">☀️ Wake up</label>
+        <input type="time" id="sleep_wake" value="07:00">
+      </div>
+    </div>
+    <div class="sleep-calc" id="sleep-calc">8h — ✅ Good range</div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-back" id="back-6">&larr; Back</button>
+    <button class="btn-next" id="next-6">Continue</button>
+  </div>
+</div>
+
+
+<!-- Page 7: Photo Upload -->
+<div id="page-7" class="page">
+  <div class="progress-bar">
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="progress-label">7 of 7</div>
+  </div>
+  <div class="page-title">Your photos</div>
+  <div class="page-sub">3 selfies + 1 full-body shot. Tap each box to take a photo. At least 3 required.</div>
+
+  <div class="photo-grid">
+    <div class="photo-box" id="photo-box-front">
+      <input type="file" accept="image/jpeg,image/png" capture="user" id="photo-front">
+      <span class="photo-icon">📷</span>
+      <span class="photo-label">Front</span>
+      <span class="photo-angle">Face the camera</span>
+    </div>
+    <div class="photo-box" id="photo-box-left">
+      <input type="file" accept="image/jpeg,image/png" capture="user" id="photo-left">
+      <span class="photo-icon">📷</span>
+      <span class="photo-label">Left 45°</span>
+      <span class="photo-angle">Turn left slightly</span>
+    </div>
+    <div class="photo-box" id="photo-box-right">
+      <input type="file" accept="image/jpeg,image/png" capture="user" id="photo-right">
+      <span class="photo-icon">📷</span>
+      <span class="photo-label">Right 45°</span>
+      <span class="photo-angle">Turn right slightly</span>
+    </div>
+    <div class="photo-box" id="photo-box-body">
+      <input type="file" accept="image/jpeg,image/png" capture="environment" id="photo-body">
+      <span class="photo-icon">📷</span>
+      <span class="photo-label">Full body</span>
+      <span class="photo-angle">Head to toe</span>
+    </div>
+  </div>
+  <div style="font-size:12px;color:#999;margin-bottom:12px;" id="photo-count">0 of 4 photos taken</div>
+  <div class="field-error" id="photos-error" style="margin-bottom:12px;"></div>
+
+  <button class="btn-analyze" id="analyze-btn" disabled>Perform Analysis</button>
+  <div id="status"></div>
+
+  <div class="nav-row" style="border-top:none;margin-top:12px;">
+    <button class="btn-back" id="back-7">&larr; Back</button>
+    <div></div>
+  </div>
+</div>
+
+
+<!-- ========== RESULTS PAGE ========== -->
+<div id="results-page" class="page">
+  <div class="page-title">Your Analysis</div>
+  <div id="results-content"></div>
+  <button id="back-btn">&#8592; Go Back</button>
+</div>
+
+
+<script src="/static/new_app.js"></script>
+
+</body>
+</html>
