@@ -4,7 +4,7 @@ FROM node:20-alpine AS frontend-build
 WORKDIR /static
 
 COPY static/package*.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 COPY static/ .
 RUN npm run build && \
