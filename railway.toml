@@ -1,2 +1,2 @@
 [deploy]
-startCommand = "cd static && npm ci && npm run build && cp sample.jpg dist/sample.jpg && cp src/logo.jpeg dist/logo.jpeg && cd .. && pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
