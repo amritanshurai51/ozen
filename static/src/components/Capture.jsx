@@ -9,6 +9,8 @@ const ANGLES = [
   { key: "right_45", label: "Right 45°", hint: "Turn head to your RIGHT — left ear disappears", icon: "↘" },
 ];
 
+const CAMERA_FRAME_HEIGHT = "clamp(280px, 44vh, 370px)";
+
 function captureFrame(video) {
   const MAX = 768;
   let w = video.videoWidth || 640;
@@ -363,7 +365,7 @@ export default function Capture({ answers, onComplete, onBack }) {
               borderRadius: 22,
               overflow: "hidden",
               background: camReady ? "#D8DBE8" : "linear-gradient(180deg, #E8EBF6 0%, #D7DBE8 100%)",
-              minHeight: 370,
+              height: CAMERA_FRAME_HEIGHT,
               marginBottom: 16,
             }}>
               <video
@@ -377,7 +379,6 @@ export default function Capture({ answers, onComplete, onBack }) {
                 style={{
                   width: "100%",
                   height: "100%",
-                  minHeight: 370,
                   objectFit: "cover",
                   display: "block",
                   transform: "scaleX(-1)",
@@ -395,7 +396,6 @@ export default function Capture({ answers, onComplete, onBack }) {
                     inset: 0,
                     width: "100%",
                     height: "100%",
-                    minHeight: 370,
                     objectFit: "cover",
                     display: "block",
                     filter: "grayscale(1) contrast(.95) opacity(.72)",

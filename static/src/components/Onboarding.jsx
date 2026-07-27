@@ -39,12 +39,16 @@ const STEPS = [
     type: "single",
     autoAdvance: true,
     options: [
-      { value: "Latino", label: "Latino" },
-      { value: "Black", label: "Black" },
+      { value: "European / Caucasian", label: "European / Caucasian" },
+      { value: "African American", label: "African American" },
       { value: "Asian", label: "Asian" },
-      { value: "White", label: "White" },
+      { value: "Southeast Asian", label: "Southeast Asian" },
       { value: "Middle Eastern", label: "Middle Eastern" },
-      { value: "Indian / South Asian", label: "Indian / South Asian" },
+      { value: "Native Hawaiian", label: "Native Hawaiian" },
+      { value: "Pacific Islander", label: "Pacific Islander" },
+      { value: "Indigenous", label: "Indigenous" },
+      { value: "Mixed", label: "Mixed" },
+      { value: "Other", label: "Other" },
     ],
   },
   {
@@ -143,6 +147,14 @@ const STEPS = [
       { value: "Exfolitor", label: "Exfolitor", icon: Exfolitor },
       { value: "None", label: "None", icon: NoneProduct },
     ],
+  },
+  {
+    id: "personalization",
+    eyebrow: "A LITTLE MORE ABOUT YOU",
+    title: "Help us personalize your experience",
+    sub: "Share any allergies, sensitivities, or treatments to help us recommend what's best for your skin.",
+    type: "personalize",
+    optional: true,
   },
   {
     id: "focus_area",
@@ -408,24 +420,106 @@ function MultiStep({ step, value = [], setValue }) {
 
 function LocationStep({ step, value, setValue }) {
   const [query, setQuery] = useState(value || "");
+  const [locating, setLocating] = useState(false);
   const filtered = useMemo(
     () => step.suggestions.filter((city) => city.toLowerCase().includes(query.toLowerCase())),
     [query, step.suggestions]
   );
 
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      const fallback = "Current location";
+      setQuery(fallback);
+      setValue(fallback);
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        const fallback = "Current location";
+        setQuery(fallback);
+        setValue(fallback);
+        setLocating(false);
+      },
+      () => {
+        const fallback = "Current location";
+        setQuery(fallback);
+        setValue(fallback);
+        setLocating(false);
+      }
+    );
+  };
+
   return (
     <div>
-      <input
-        type="text"
-        placeholder="Search your place"
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setValue(e.target.value);
+      <div style={{ position: "relative" }}>
+        <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "#A3A8B7", display: "flex", alignItems: "center" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.2" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M16 16 20 20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </span>
+        <input
+          type="text"
+          placeholder="Search your city"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setValue(e.target.value);
+          }}
+          style={{ ...fieldStyle, minHeight: 54, paddingLeft: 40, borderRadius: 999 }}
+        />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 2px 12px" }}>
+        <div style={{ flex: 1, height: 1, background: "#ECEEF4" }} />
+        <div style={{ fontSize: 11, color: "#8C8FA1", letterSpacing: 1.2 }}>OR</div>
+        <div style={{ flex: 1, height: 1, background: "#ECEEF4" }} />
+      </div>
+
+      <button
+        onClick={handleUseCurrentLocation}
+        style={{
+          width: "100%",
+          border: "none",
+          background: "transparent",
+          padding: "12px 2px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          cursor: "pointer",
+          textAlign: "left",
         }}
-        style={fieldStyle}
-      />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 16 }}>
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#EEF1FF", display: "flex", alignItems: "center", justifyContent: "center", color: "#4C5CFF", flexShrink: 0 }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.1" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M12 2.8v3.1M12 18.1v3.1M21.2 12h-3.1M5.9 12H2.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: "#17181F" }}>
+              {locating ? "Detecting location..." : "Use Current Location"}
+            </div>
+            <div style={{ fontSize: 12, color: "#6F7487", marginTop: 2 }}>Detect your city automatically</div>
+          </div>
+        </div>
+        <span style={{ fontSize: 18, color: "#17181F", lineHeight: 1 }}>›</span>
+      </button>
+
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 22, color: "#8C8FA1" }}>
+        <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#F1F1F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="6.5" y="10.2" width="11" height="8.3" rx="1.8" stroke="#7D8292" strokeWidth="1.7" />
+            <path d="M8.8 10.2V8.5a3.2 3.2 0 1 1 6.4 0v1.7" stroke="#7D8292" strokeWidth="1.7" strokeLinecap="round" />
+          </svg>
+        </span>
+        <div style={{ fontSize: 12, lineHeight: 1.45 }}>Your location is used only to personalize your experience and is never shared.</div>
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 18 }}>
         {filtered.slice(0, 8).map((city) => (
           <button
             key={city}
@@ -446,6 +540,81 @@ function LocationStep({ step, value, setValue }) {
             {city}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function PersonalizationCard({ icon, title, placeholder, value, onChange }) {
+  return (
+    <div style={{ borderRadius: 22, border: "1px solid #E7E7EC", background: "#FFFFFF", boxShadow: "0 10px 26px rgba(15, 23, 42, 0.05)", padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+        <div style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid #E5E8F2", display: "flex", alignItems: "center", justifyContent: "center", color: "#6E7CFF", flexShrink: 0 }}>
+          {icon}
+        </div>
+        <div>
+          <div style={{ fontSize: 15, lineHeight: 1.35, fontWeight: 500, color: "#17181F" }}>{title}</div>
+          <div style={{ fontSize: 12, color: "#8C8FA1", marginTop: 3 }}>Optional</div>
+        </div>
+      </div>
+
+      <textarea
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value.slice(0, 300))}
+        placeholder={placeholder}
+        style={{
+          width: "100%",
+          minHeight: 104,
+          resize: "none",
+          border: "none",
+          outline: "none",
+          padding: 0,
+          fontSize: 14,
+          lineHeight: 1.6,
+          color: "#5C6280",
+          background: "transparent",
+        }}
+      />
+      <div style={{ height: 1, background: "#ECEEF4", marginTop: 8 }} />
+      <div style={{ marginTop: 8, textAlign: "right", fontSize: 11, color: "#99A0B6" }}>{(value || "").length}/300</div>
+    </div>
+  );
+}
+
+function PersonalizationStep({ value = {}, setValue }) {
+  return (
+    <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <PersonalizationCard
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 4.5c3.3 0 6 2.7 6 6 0 4.4-6 9-6 9s-6-4.6-6-9c0-3.3 2.7-6 6-6Z" stroke="currentColor" strokeWidth="1.6" />
+              <path d="M12 8.3v4.4M9.8 10.5h4.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          }
+          title="Do you have any known allergies or skin sensitivities?"
+          placeholder="e.g. fragrance, nut oil (almond oil), essential oils or leave blank"
+          value={value.allergies || ""}
+          onChange={(next) => setValue({ ...value, allergies: next })}
+        />
+
+        <PersonalizationCard
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14M12 5v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <path d="M7.2 8.2h9.6a2.2 2.2 0 0 1 2.2 2.2v3.2a2.2 2.2 0 0 1-2.2 2.2H7.2A2.2 2.2 0 0 1 5 13.6v-3.2a2.2 2.2 0 0 1 2.2-2.2Z" stroke="currentColor" strokeWidth="1.6" />
+            </svg>
+          }
+          title="Are you currently using any medications or active treatments?"
+          placeholder="e.g. retinol, acne medication, or leave blank"
+          value={value.medications || ""}
+          onChange={(next) => setValue({ ...value, medications: next })}
+        />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 18, color: "#8C8FA1" }}>
+        <span style={{ fontSize: 14, lineHeight: 1 }}>ⓘ</span>
+        <div style={{ fontSize: 12, lineHeight: 1.5 }}>This information is optional and you can skip it if you prefer.</div>
       </div>
     </div>
   );
@@ -821,6 +990,7 @@ function normalizeAnswers(state) {
       sensitiveResistant: state.routine_sensitive || "",
       concerns: state.skin_concerns || [],
       focusArea: state.focus_area || "",
+      personalization: state.personalization || {},
     },
     body: state.body || {},
     style: state.style || [],
@@ -842,6 +1012,9 @@ function isValid(step, value) {
   }
   if (step.type === "sleep") {
     return !!(value?.bed && value?.wake);
+  }
+  if (step.type === "personalize") {
+    return true;
   }
   if (step.type === "dob") {
     return /^\d{2}-\d{2}-\d{4}$/.test(String(value || ""));
@@ -1062,6 +1235,7 @@ function StepRenderer({ step, value, setValue, onAfterSelect }) {
   if (step.type === "faceAreas") return <FaceAreaStep step={step} value={value} setValue={setValue} />;
   if (step.type === "body") return <BodyStep step={step} value={value} setValue={setValue} />;
   if (step.type === "sleep") return <SleepStep value={value} setValue={setValue} />;
+  if (step.type === "personalize") return <PersonalizationStep value={value} setValue={setValue} />;
   if (step.type === "dob") return <DateOfBirthStep value={value} setValue={setValue} />;
   return null;
 }
@@ -1099,6 +1273,15 @@ export default function Onboarding({ onComplete, onBack }) {
     setStepIndex((current) => current + 1);
   };
 
+  const handleSkip = () => {
+    if (stepIndex === STEPS.length - 1) {
+      onComplete(normalizeAnswers(answers));
+      return;
+    }
+    setDir(1);
+    setStepIndex((current) => current + 1);
+  };
+
   const handleAutoAdvance = (nextValue) => {
     if (!step.autoAdvance || !isValid(step, nextValue)) return;
     window.setTimeout(() => {
@@ -1127,6 +1310,11 @@ export default function Onboarding({ onComplete, onBack }) {
             animation: `${dir > 0 ? "slideInR" : "slideInL"} .28s ease`,
           }}
         >
+          {step.eyebrow ? (
+            <div style={{ margin: "0 0 10px", fontSize: 11, letterSpacing: 2.2, color: "#9AA0B4" }}>
+              {step.eyebrow}
+            </div>
+          ) : null}
           <h1 style={{ margin: "0 0 10px", fontSize: 24, lineHeight: 1.15, fontWeight: 500 }}>
             {step.title}
           </h1>
@@ -1169,6 +1357,23 @@ export default function Onboarding({ onComplete, onBack }) {
             >
               {stepIndex === STEPS.length - 1 ? "Continue to photo capture" : "Continue"}
             </button>
+            {step.type === "personalize" ? (
+              <button
+                onClick={handleSkip}
+                style={{
+                  width: "100%",
+                  marginTop: 12,
+                  border: "none",
+                  background: "transparent",
+                  color: "#8C8FA1",
+                  fontSize: 14,
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+              >
+                Skip for now
+              </button>
+            ) : null}
           </div>
         )}
       </div>
