@@ -1,4 +1,6 @@
-// ── Brand tokens (single source of truth) ──────────────────────────────────
+import logoImage from "./logo.jpeg";
+
+// ── Brand tokens 
 export const C = {
   indigo:       "#2A2F8F",
   indigoBright: "#4B52D6",
@@ -14,6 +16,9 @@ export const C = {
   warn:         "#C9A0E8",
   red:          "#E08AA8",
 };
+
+export const LIGHT_SURFACE_BORDER = "#EBEBEB";
+export const LIGHT_SURFACE_SHADOW = "0 3px 10px rgba(0, 0, 0, 0.15)";
 
 // Score → colour on a red→yellow→green gradient (0–10 scale)
 export function scoreColor10(s) {
@@ -51,7 +56,7 @@ export function ScoreBar({ score, delay = 0 }) {
 export function OzenLogo({ size = 24 }) {
   return (
     <img
-      src="/logo.jpeg"
+      src={logoImage}
       alt="OZEN"
       width={size}
       height={size}
@@ -60,13 +65,15 @@ export function OzenLogo({ size = 24 }) {
   );
 }
 
+export { logoImage };
+
 // Wordmark
 export function OzenWordmark({ size = 20 }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
       <OzenLogo size={size + 4} />
       <span style={{
-        fontFamily: "'Syne', sans-serif",
+        fontFamily: "'Sora', sans-serif",
         fontSize: size,
         fontWeight: 700,
         letterSpacing: 3,

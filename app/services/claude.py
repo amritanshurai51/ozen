@@ -1,10 +1,225 @@
-from anthropic import Anthropic
-import anthropic
+# import os
+# import io
+# import base64
+
+# from dotenv import load_dotenv
+# from PIL import Image
+# import anthropic
+# from app.services.prompts import OZEN_SYSTEM_PROMPT
+
+# load_dotenv()
+
+# class Claude_Analyser:
+
+#     def __init__(self):
+
+#         api_key = os.getenv("ANTHROPIC_API_KEY")
+#         self.client = anthropic.Anthropic(api_key=api_key)
+#         self.MODEL_NAME = "claude-sonnet-4-5"
+
+
+#     def compress_image(self, image_bytes: bytes, max_size=4 * 1024 * 1024) -> bytes:
+#         img = Image.open(io.BytesIO(image_bytes))
+#         img = img.convert("RGB")
+#         img.thumbnail((1024, 1024))
+
+#         buffer = io.BytesIO()
+#         img.save(buffer, format="JPEG", quality=85)
+
+#         if buffer.tell() > max_size:
+#             buffer = io.BytesIO()
+#             img.save(buffer, format="JPEG", quality=60)
+
+#         return buffer.getvalue()
+    
+#     def set_tool_params(self, quiz_data: dict) -> dict:
+#         gender  = quiz_data.get("gender", "m").lower()
+#         is_male = gender == "m"
+
+#         score_properties = {
+#             "eyes":         {"type": "number"},
+#             "eyebrows":     {"type": "number"},
+#             "hair":         {"type": "number"},
+#             "skin_quality": {"type": "number"},
+#             "jawline":      {"type": "number"},
+#         }
+#         obs_properties  = {k: {"type": "string"} for k in score_properties}
+#         required_scores = list(score_properties.keys())
+
+#         if is_male:
+#             score_properties["facial_hair"] = {"type": "number"}
+#             obs_properties["facial_hair"]   = {"type": "string"}
+#             required_scores.append("facial_hair")
+
+#         parameters = {
+#             "gender":           gender,
+#             "is_male":          is_male,
+#             "bmi":              quiz_data.get("bmi"),
+#             "score_properties": score_properties,
+#             "obs_properties":   obs_properties,
+#             "required_scores":  required_scores,
+#         }
+
+#         return parameters 
+    
+#     def build_tool(self, score_properties: dict, obs_properties: dict, required_scores: list) -> dict:
+#         tool = {
+#             "name": "face_score_analysis",
+#             "description": "Scored facial analysis with actionable recommendations",
+#             "input_schema": {
+#                 "type": "object",
+#                 "properties": {
+#                     "image_check": {
+#                         "type": "string",
+#                         "description": "pass if images are valid, otherwise the rejection reason"
+#                     },
+#                     "image_conditions": {
+#                         "type": "object",
+#                         "properties": {
+#                             "lighting":             {"type": "string"},
+#                             "angle":                {"type": "string"},
+#                             "compensation_applied": {"type": "string"}
+#                         }
+#                     },
+#                     "detected_ethnicity": {
+#                         "type": "string",
+#                         "description": "Echo back the user-provided ethnicity exactly. Do NOT visually override."
+#                     },
+#                     "face_shape": {"type": "string"},
+#                     "scores": {
+#                         "type": "object",
+#                         "description": "Score each parameter 1.0-10.0. Exceptional features must score 8.5+.",
+#                         "properties": score_properties,
+#                         "required":   required_scores
+#                     },
+#                     "observations": {
+#                         "type": "object",
+#                         "description": "1-2 sentence observation per parameter justifying the score.",
+#                         "properties": obs_properties,
+#                         "required":   required_scores
+#                     },
+#                     "overall_score": {
+#                         "type": "number",
+#                         "description": "Weighted overall 1.0-10.0. Weights: jawline 1.3x, eyes 1.2x, skin_quality 1.1x, eyebrows 1.0x, hair 1.0x, facial_hair 0.9x (men)."
+#                     },
+#                     "potential_score": {
+#                         "type": "number",
+#                         "description": "Realistic 6-12 month ceiling. Max +1.5 above current overall."
+#                     },
+#                     "strengths": {
+#                         "type": "array",
+#                         "items": {"type": "string"},
+#                         "description": "2-3 strongest features, framed positively and specifically."
+#                     },
+#                     "primary_focus_areas": {
+#                         "type": "array",
+#                         "description": "2-3 highest-leverage improvement areas. Only include if score is below 7.5.",
+#                         "items": {
+#                             "type": "object",
+#                             "properties": {
+#                                 "area":          {"type": "string"},
+#                                 "current_score": {"type": "number"},
+#                                 "zone": {
+#                                     "type": "string",
+#                                     "description": "red (below 5.5) / yellow (5.5-7.0) / green (7.0+)"
+#                                 },
+#                                 "why_it_matters": {
+#                                     "type": "string",
+#                                     "description": "1-2 sentences. Encouraging, constructive, no clinical terms."
+#                                 },
+#                                 "action_steps": {
+#                                     "type": "array",
+#                                     "items": {
+#                                         "type": "object",
+#                                         "properties": {
+#                                             "step": {
+#                                                 "type": "string",
+#                                                 "description": "Concrete actionable habit."
+#                                             },
+#                                             "product_recommendation": {
+#                                                 "type": "object",
+#                                                 "description": "Single product matched to user's budget. Name a specific real brand with price in AED or INR.",
+#                                                 "properties": {
+#                                                     "name":  {"type": "string"},
+#                                                     "price": {"type": "string"},
+#                                                     "where": {"type": "string"}
+#                                                 },
+#                                                 "required": ["name", "price", "where"]
+#                                             },
+#                                             "timeframe": {"type": "string"}
+#                                         }
+#                                     }
+#                                 }
+#                             }
+#                         }
+#                     },
+#                     "30_day_protocol": {
+#                         "type": "array",
+#                         "items": {"type": "string"},
+#                         "description": "5-7 concrete daily habits to start tomorrow."
+#                     },
+#                     "disclaimer": {"type": "string"}
+#                 },
+#                 "required": ["image_check", "scores", "observations", "overall_score", "disclaimer"]
+#             }
+#         }
+
+#         return tool
+    
+
+#     def analysis(self, images: list[dict], quiz_data: dict) -> dict:
+
+#         params = self.set_tool_params(quiz_data)
+
+#         # Make List of Images [compressed/resized] as content to be passed 
+#         content = []
+#         for img in images:
+#             compressed = self.compress_image(img["bytes"])
+#             b64 = base64.standard_b64encode(compressed).decode("utf-8")
+#             content.append({
+#                 "type": "image",
+#                 "source": {"type": "base64", "media_type": "image/jpeg", "data": b64}
+#             })
+#         content.append({
+#             "type": "text",
+#             "text": self.build_prompt(quiz_data, params["is_male"], params["bmi"])
+#         })
+
+#         tool = self.build_tool(params["score_properties"],params["obs_properties"],params["required_scores"])
+
+#         try:
+#             response = self.client.messages.create(
+#                 model=self.MODEL_NAME,
+#                 max_tokens=4000,
+#                 system=OZEN_SYSTEM_PROMPT,
+#                 tools=[tool],
+#                 tool_choice={"type": "tool", "name": "face_score_analysis"},
+#                 messages=[{"role": "user", "content": content}]
+#             )
+#             result = response.content[0].input
+#             result["gender"] = params["gender"]
+#             return result
+
+#         except anthropic.AuthenticationError as e:
+#             return {"error": True, "message": "Authentication failed", "detail": str(e)}
+#         except anthropic.RateLimitError as e:
+#             return {"error": True, "message": "Rate limited — try again shortly", "detail": str(e)}
+#         except anthropic.BadRequestError as e:
+#             return {"error": True, "message": "Bad request — check image format", "detail": str(e)}
+#         except anthropic.APIConnectionError as e:
+#             return {"error": True, "message": "Could not connect to Claude", "detail": str(e)}
+#         except anthropic.APIError as e:
+#             return {"error": True, "message": "Claude service error", "detail": str(e)}
+
+
 import os
-from dotenv import load_dotenv
+import io
 import base64
+
+from dotenv import load_dotenv
 from PIL import Image
-import io, os
+import anthropic
+from app.services.prompts import OZEN_SYSTEM_PROMPT
 
 load_dotenv()
 
@@ -12,81 +227,10 @@ load_dotenv()
 class Claude_Analyser:
 
     def __init__(self):
-        self.system_prompt = """You are a wellness suggestion assistant. Based on the user's photos and profile, provide general lifestyle suggestions about skin health, sleep, hydration, diet, and exercise.
+        self.client     = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        self.model      = "claude-sonnet-4-6"
 
-                                FIRST, check the uploaded images:
-                                - If any image does not contain a human face or body, set image_check to "no face detected" and leave all other fields empty.
-                                - If any image contains multiple people, set image_check to "multiple faces detected" and leave all other fields empty.
-                                - If any face is too blurry, distorted, or obscured, set image_check to "image not clear, please retake" and leave all other fields empty.
-                                - If all images are valid, set image_check to "pass" and proceed with the analysis.
-
-                                Be warm and encouraging. Keep each observation and suggestion to 1-2 sentences maximum. Use plain text, no markdown. Never diagnose. Never recommend medications or specific products.
-                                End with a disclaimer that these are general suggestions only, not medical advice."""
-
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = Anthropic(api_key=api_key)
-        self.MODEL_NAME = "claude-sonnet-4-5"
-
-        self.OZEN_SYSTEM_PROMPT = """You are OZEN, an advanced facial aesthetics analysis engine for men and women across South Asian and Middle Eastern ethnicities — Indian, Pakistani, Bangladeshi, Sri Lankan, Arab, Persian, Turkish, and mixed-ethnicity faces common in the UAE and Gulf region.
-
-CORE PRINCIPLES:
-- CONSISTENCY. Same face under different conditions scores within +/- 0.3 points.
-- HONESTY. A 4.2 is a 4.2. Never inflate. Never deflate.
-- ETHNICITY CALIBRATION. Score relative to the user's own ethnic norms, never Western standards.
-- FULL RANGE USAGE. You MUST use the full 1.0-10.0 scale. Exceptional faces must score exceptionally. Refusing to score above 7.5 when the evidence clearly warrants it is a scoring error.
-- ACTIONABLE OUTPUT. Every score pairs with specific, costed recommendations in AED (and INR if Indian).
-- LEGAL SAFETY. No medical diagnoses. No surgery or prescription recommendations. Generic product categories only.
-
-SCORING SCALE — ANCHORED DEFINITIONS:
-Use these anchors to calibrate every score. Do not compress into the middle range.
-
-9.0 – 10.0 | EXCEPTIONAL
-Structurally near-flawless for this parameter. Objectively striking. Would stand out in any room globally.
-Eyes: Perfect almond shape, ideal canthal tilt, zero periorbital issues, exceptional spacing.
-Jawline: Razor-sharp angular definition, zero visible fat, jaw angle highly prominent at rest.
-Skin: Completely clear, luminous, zero visible pores, professional-level glow.
-Hair: Perfect density, ideal hairline, excellently styled.
-Eyebrows: Perfectly shaped, dense, symmetrical, ideal arch.
-
-7.5 – 8.9 | CLEARLY ABOVE AVERAGE
-Noticeably attractive feature. Minimal issues. Top 10-15% for this parameter.
-Eyes: Good shape, good tilt, minor periorbital concerns only.
-Jawline: Well-defined, visible angularity, minor softness only.
-Skin: Mostly clear, minor texture or oiliness, no active breakouts.
-Hair: Good density, clean hairline, well-maintained.
-Eyebrows: Well-groomed, good shape, minor asymmetry only.
-
-6.5 – 7.4 | ABOVE AVERAGE
-Above average with addressable issues. Top 25%.
-Clear strengths visible but room for meaningful improvement.
-
-5.5 – 6.4 | AVERAGE — MIDDLE RANGE
-Typical population. Neither strong nor weak. Standard issues present.
-
-4.0 – 5.4 | BELOW AVERAGE
-Noticeable concerns in this parameter. Clear improvement path available.
-
-1.0 – 3.9 | SIGNIFICANT CONCERNS
-Major issues that substantially affect this parameter. Bottom 10%.
-
-OVERALL SCORE ANCHORS:
-9.0-10.0: Objectively exceptional face. Rare globally. Professional model tier.
-8.0-8.9: Highly attractive. Top 5% for their ethnicity and gender.
-7.0-7.9: Clearly good-looking. Above average across all parameters.
-6.0-6.9: Above average overall with some notable weaknesses.
-5.0-5.9: Average. Typical population.
-Below 5.0: Below average with significant correctable concerns.
-
-CRITICAL RULES:
-- If a parameter is genuinely exceptional, score it 8.5-9.5. Do not cap at 7.5 out of caution.
-- If the overall face is clearly model-tier or professionally attractive, overall_score must reflect that (8.0+).
-- The distribution across your user base should be: bottom 10% score 1-3.9, next 25% score 4-5.4, middle 35% score 5.5-6.4, next 20% score 6.5-7.4, top 10% score 7.5+. But this is a population distribution — individual faces that are clearly exceptional must be scored accordingly.
-- Never give the same score to a clearly exceptional parameter and an average one.
-
-Output ONLY the tool call with valid data. No text outside the tool."""
-
-    # ── image compression ─────────────────────────────────────────────────────
-    def compress_image(self, image_bytes: bytes, max_size=4 * 1024 * 1024) -> bytes:
+    def compress_image(self, image_bytes: bytes, max_size: int = 4 * 1024 * 1024) -> bytes:
         img = Image.open(io.BytesIO(image_bytes))
         img = img.convert("RGB")
         img.thumbnail((1024, 1024))
@@ -100,29 +244,18 @@ Output ONLY the tool call with valid data. No text outside the tool."""
 
         return buffer.getvalue()
 
-    # ── main scoring function ─────────────────────────────────────────────────
-    def score_analysis(self, images: list[dict], quiz_data: dict) -> dict:
-
-        content = []
-        for img in images:
-            compressed = self.compress_image(img["bytes"])
-            b64 = base64.standard_b64encode(compressed).decode("utf-8")
-            content.append({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/jpeg",
-                    "data": b64
-                }
-            })
-
-        gender = quiz_data.get("gender", "m").lower()
+    def construct_quiz_parameters(self, quiz_data: dict) -> dict:
+        gender  = quiz_data.get("gender", "m").lower()
         is_male = gender == "m"
+        bmi     = quiz_data.get("bmi", 22.0)  # calculated by input_form.py
 
-        height = float(quiz_data.get("height", 170) or 170)
-        weight = float(quiz_data.get("weight", 70) or 70)
-        bmi = round(weight / ((height / 100) ** 2), 1) if height > 0 else 22.0
+        return {
+            "gender":  gender,
+            "is_male": is_male,
+            "bmi":     bmi,
+        }
 
+    def build_prompt(self, quiz_data: dict, is_male: bool, bmi: float) -> str:
         facial_hair_instruction = (
             "- facial_hair: Score beard/stubble grooming, coverage, and how it complements or detracts from structure. "
             "No facial hair → score 5.0 and note they could consider growing it. "
@@ -132,18 +265,21 @@ Output ONLY the tool call with valid data. No text outside the tool."""
             "- facial_hair: DO NOT score this parameter for female users. Omit entirely."
         )
 
-        prompt = f"""Analyse this person's face and provide an honest, calibrated scored assessment.
+        return f"""Analyse this person's face and provide an honest, calibrated scored assessment.
 
 User profile:
 - Age: {quiz_data.get('age', 'unknown')}
 - Gender: {'Male' if is_male else 'Female'}
 - Ethnicity (user-confirmed, do not override): {quiz_data.get('ethnicity', 'unknown')}
 - City: {quiz_data.get('city', 'unknown')}
-- Height: {height}cm, Weight: {weight}kg, BMI: {bmi}
-- Goal: {quiz_data.get('primary_goal', 'General glow-up')}
-- Skincare routine: {quiz_data.get('skincare_routine', 'None')}, Issues: {quiz_data.get('skin_issues', 'None')}
-- Body type: {quiz_data.get('body_type', 'Average')}
-- Style: {quiz_data.get('style_type', 'unknown')}, Budget: {quiz_data.get('monthly_budget', 'unknown')} ({quiz_data.get('currency', 'aed')})
+- Height: {quiz_data.get('height', 170)}cm, Weight: {quiz_data.get('weight', 70)}kg, BMI: {bmi}
+- Skin type: {quiz_data.get('skin_type', 'unknown')}
+- Skincare routine: {quiz_data.get('skincare_routine', 'None')}
+- Products already using: {quiz_data.get('skin_products', 'None')}
+- SPF habit: {quiz_data.get('spf_habit', 'unknown')}, Level: {quiz_data.get('spf_level', 'N/A')}
+- Water intake: {quiz_data.get('water_intake', 'unknown')}
+- Hair type: {quiz_data.get('hair_type', 'unknown')}, Texture: {quiz_data.get('hair_texture', 'unknown')}
+- Budget: {quiz_data.get('monthly_budget', 'unknown')} ({quiz_data.get('currency', 'aed')})
 - Fitness: {quiz_data.get('gym_fitness', 'Not training')}, Sleep: {quiz_data.get('sleep_hours', 7)}h
 
 Score each parameter 1.0-10.0. Use the full scale. Refer to the scoring anchors in your system prompt.
@@ -164,139 +300,150 @@ Parameters to score:
 
 Be specific in observations — describe exactly what you see in the photos that justifies each score."""
 
-        content.append({"type": "text", "text": prompt})
-
-        score_properties = {
-            "eyes":         {"type": "number"},
-            "eyebrows":     {"type": "number"},
-            "hair":         {"type": "number"},
-            "skin_quality": {"type": "number"},
-            "jawline":      {"type": "number"},
-        }
-        obs_properties = {
-            "eyes":         {"type": "string"},
-            "eyebrows":     {"type": "string"},
-            "hair":         {"type": "string"},
-            "skin_quality": {"type": "string"},
-            "jawline":      {"type": "string"},
-        }
-        required_scores = ["eyes", "eyebrows", "hair", "skin_quality", "jawline"]
-
-        if is_male:
-            score_properties["facial_hair"] = {"type": "number"}
-            obs_properties["facial_hair"]   = {"type": "string"}
-            required_scores.append("facial_hair")
-
-        try:
-            response = self.client.messages.create(
-                model=self.MODEL_NAME,
-                max_tokens=4000,
-                system=self.OZEN_SYSTEM_PROMPT,
-                tools=[
-                    {
-                        "name": "face_score_analysis",
-                        "description": "Scored facial analysis with actionable recommendations",
-                        "input_schema": {
+    def build_tool(self) -> dict:
+        return {
+            "name": "face_score_analysis",
+            "description": "Scored facial analysis with actionable recommendations",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "image_check": {
+                        "type": "string",
+                        "description": "pass if images are valid, otherwise the rejection reason"
+                    },
+                    "image_conditions": {
+                        "type": "object",
+                        "properties": {
+                            "lighting":             {"type": "string"},
+                            "angle":                {"type": "string"},
+                            "compensation_applied": {"type": "string"}
+                        }
+                    },
+                    "detected_ethnicity": {
+                        "type": "string",
+                        "description": "Echo back the user-provided ethnicity exactly. Do NOT visually override."
+                    },
+                    "face_shape": {"type": "string"},
+                    "scores": {
+                        "type": "object",
+                        "description": "Score each parameter 1.0-10.0. Exceptional features must score 8.5+.",
+                        "properties": {
+                            "eyes":         {"type": "number"},
+                            "eyebrows":     {"type": "number"},
+                            "hair":         {"type": "number"},
+                            "skin_quality": {"type": "number"},
+                            "jawline":      {"type": "number"},
+                            "facial_hair":  {"type": "number"}
+                        },
+                        "required": ["eyes", "eyebrows", "hair", "skin_quality", "jawline"]
+                    },
+                    "observations": {
+                        "type": "object",
+                        "description": "1-2 sentence observation per parameter justifying the score.",
+                        "properties": {
+                            "eyes":         {"type": "string"},
+                            "eyebrows":     {"type": "string"},
+                            "hair":         {"type": "string"},
+                            "skin_quality": {"type": "string"},
+                            "jawline":      {"type": "string"},
+                            "facial_hair":  {"type": "string"}
+                        },
+                        "required": ["eyes", "eyebrows", "hair", "skin_quality", "jawline"]
+                    },
+                    "overall_score": {
+                        "type": "number",
+                        "description": "Weighted overall 1.0-10.0. Weights: jawline 1.3x, eyes 1.2x, skin_quality 1.1x, eyebrows 1.0x, hair 1.0x, facial_hair 0.9x (men)."
+                    },
+                    "potential_score": {
+                        "type": "number",
+                        "description": "Realistic 6-12 month ceiling. Max +1.5 above current overall."
+                    },
+                    "strengths": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "2-3 strongest features, framed positively and specifically."
+                    },
+                    "primary_focus_areas": {
+                        "type": "array",
+                        "description": "2-3 highest-leverage improvement areas. Only include if score is below 7.5.",
+                        "items": {
                             "type": "object",
                             "properties": {
-                                "image_check": {
+                                "area":          {"type": "string"},
+                                "current_score": {"type": "number"},
+                                "zone": {
                                     "type": "string",
-                                    "description": "pass if images show a clear human face, otherwise the rejection reason"
+                                    "description": "red (below 5.5) / yellow (5.5-7.0) / green (7.0+)"
                                 },
-                                "image_conditions": {
-                                    "type": "object",
-                                    "properties": {
-                                        "lighting":             {"type": "string"},
-                                        "angle":                {"type": "string"},
-                                        "compensation_applied": {"type": "string"}
-                                    }
-                                },
-                                "detected_ethnicity": {
+                                "why_it_matters": {
                                     "type": "string",
-                                    "description": "Echo back the user-provided ethnicity exactly. Do NOT visually override."
+                                    "description": "1-2 sentences. Encouraging, constructive, no clinical terms."
                                 },
-                                "face_shape": {"type": "string"},
-                                "scores": {
-                                    "type": "object",
-                                    "description": "Score each parameter 1.0-10.0 using the full scale. Exceptional features must score 8.5+. Do not compress.",
-                                    "properties": score_properties,
-                                    "required": required_scores
-                                },
-                                "observations": {
-                                    "type": "object",
-                                    "description": "1-2 sentence observation per parameter explaining exactly what is visible in the photos that justifies the score.",
-                                    "properties": obs_properties,
-                                    "required": required_scores
-                                },
-                                "overall_score": {
-                                    "type": "number",
-                                    "description": "Weighted overall 1.0-10.0. Weights: jawline 1.3x, eyes 1.2x, skin_quality 1.1x, eyebrows 1.0x, hair 1.0x, facial_hair 0.9x (men). A face with multiple 8.5+ parameters must score 8.0+ overall."
-                                },
-                                "potential_score": {
-                                    "type": "number",
-                                    "description": "Realistic 6-12 month ceiling following all recommendations. Max +1.5 above current overall."
-                                },
-                                "strengths": {
+                                "action_steps": {
                                     "type": "array",
-                                    "items": {"type": "string"},
-                                    "description": "2-3 strongest features framed positively and specifically"
-                                },
-                                "primary_focus_areas": {
-                                    "type": "array",
-                                    "description": "2-3 highest-leverage improvement areas. Only include if score is below 7.5 for that parameter.",
                                     "items": {
                                         "type": "object",
                                         "properties": {
-                                            "area":           {"type": "string"},
-                                            "current_score":  {"type": "number"},
-                                            "zone":           {"type": "string", "description": "red (below 5.5) / yellow (5.5-7.0) / green (7.0+)"},
-                                            "why_it_matters": {
+                                            "step": {
                                                 "type": "string",
-                                                "description": "1-2 sentences. Encouraging and constructive. No clinical terms. Frame as opportunity."
+                                                "description": "Concrete actionable habit."
                                             },
-                                            "action_steps": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "step": {
-                                                            "type": "string",
-                                                            "description": "Concrete actionable habit. No specific numeric dietary targets."
-                                                        },
-                                                        "products_or_options": {
-                                                            "type": "object",
-                                                            "description": "Three price tiers for user's market. Category and price range only — no brand names.",
-                                                            "properties": {
-                                                                "budget":  {"type": "string"},
-                                                                "mid":     {"type": "string"},
-                                                                "premium": {"type": "string"}
-                                                            },
-                                                            "required": ["budget", "mid", "premium"]
-                                                        },
-                                                        "timeframe": {"type": "string"}
-                                                    }
-                                                }
-                                            }
+                                            "product_recommendation": {
+                                                "type": "object",
+                                                "description": "Single product matched to user's budget. Name a specific real brand with price in AED or INR.",
+                                                "properties": {
+                                                    "name":  {"type": "string"},
+                                                    "price": {"type": "string"},
+                                                    "where": {"type": "string"}
+                                                },
+                                                "required": ["name", "price", "where"]
+                                            },
+                                            "timeframe": {"type": "string"}
                                         }
                                     }
-                                },
-                                "30_day_protocol": {
-                                    "type": "array",
-                                    "items": {"type": "string"},
-                                    "description": "5-7 concrete daily habits to start tomorrow."
-                                },
-                                "disclaimer": {"type": "string"}
-                            },
-                            "required": ["image_check", "scores", "observations", "overall_score", "disclaimer"]
+                                }
+                            }
                         }
-                    }
-                ],
+                    },
+                    "30_day_protocol": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "5-7 concrete daily habits to start tomorrow."
+                    },
+                    "disclaimer": {"type": "string"}
+                },
+                "required": ["image_check", "scores", "observations", "overall_score", "disclaimer"]
+            }
+        }
+
+    def analysis(self, images: list[dict], quiz_data: dict) -> dict:
+        params = self.construct_quiz_parameters(quiz_data)
+
+        # Build message content — images first, then the text prompt
+        content = []
+        for img in images:
+            compressed = self.compress_image(img["bytes"])
+            b64 = base64.standard_b64encode(compressed).decode("utf-8")
+            content.append({
+                "type": "image",
+                "source": {"type": "base64", "media_type": "image/jpeg", "data": b64}
+            })
+        content.append({
+            "type": "text",
+            "text": self.build_prompt(quiz_data, params["is_male"], params["bmi"])
+        })
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=4000,
+                system=OZEN_SYSTEM_PROMPT,
+                tools=[self.build_tool()],
                 tool_choice={"type": "tool", "name": "face_score_analysis"},
                 messages=[{"role": "user", "content": content}]
             )
-
             result = response.content[0].input
-            result["gender"] = gender
+            result["gender"] = params["gender"]
             return result
 
         except anthropic.AuthenticationError as e:
@@ -308,5 +455,4 @@ Be specific in observations — describe exactly what you see in the photos that
         except anthropic.APIConnectionError as e:
             return {"error": True, "message": "Could not connect to Claude", "detail": str(e)}
         except anthropic.APIError as e:
-            print(str(e))
             return {"error": True, "message": "Claude service error", "detail": str(e)}

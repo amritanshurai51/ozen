@@ -1,8 +1,8 @@
 import React, { useRef, useState } from "react";
-import { C, scoreColor10 } from "../brand.jsx";
+import { C, logoImage, scoreColor10 } from "../brand.jsx";
 import html2canvas from "html2canvas";
 
-// ── Score ring for share card ─────────────────────────────────────────────────
+
 function Ring({ score, size = 80, strokeWidth = 6 }) {
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
@@ -20,7 +20,7 @@ function Ring({ score, size = 80, strokeWidth = 6 }) {
   );
 }
 
-// ── The actual card that gets captured ───────────────────────────────────────
+
 function Card({ result, cardRef }) {
   const overall  = Number(result.overall_score) || 0;
   const scores   = result.scores || {};
@@ -45,7 +45,7 @@ function Card({ result, cardRef }) {
       background: "#16181D",
       borderRadius: 24,
       padding: "32px 28px 28px",
-      fontFamily: "'Syne', sans-serif",
+      fontFamily: "'Sora', sans-serif",
       border: "1px solid #2C313B",
       position: "relative",
       overflow: "hidden",
@@ -64,7 +64,7 @@ function Card({ result, cardRef }) {
         marginBottom: 28,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <img src="/logo.jpeg" width={22} height={22} style={{ borderRadius: "50%", objectFit: "cover" }} />
+          <img src={logoImage} width={22} height={22} style={{ borderRadius: "50%", objectFit: "cover" }} />
           <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: 3, color: "#EEF1F6" }}>OZEN</span>
         </div>
         <span style={{ fontSize: 10, color: "#7B8294", letterSpacing: 1 }}>FACIAL ANALYSIS</span>
@@ -141,7 +141,7 @@ function Card({ result, cardRef }) {
   );
 }
 
-// ── Main export ───────────────────────────────────────────────────────────────
+
 export default function ShareCard({ result, onClose }) {
   const cardRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
@@ -232,7 +232,7 @@ export default function ShareCard({ result, onClose }) {
               color: downloading ? "#7B8294" : "#DCE3F0",
               border: "none", borderRadius: 14, padding: 14,
               fontSize: 15, fontWeight: 700, cursor: downloading ? "default" : "pointer",
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Sora', sans-serif",
               boxShadow: downloading ? "none" : "0 6px 20px #2A2F8F55",
             }}
           >
@@ -246,7 +246,7 @@ export default function ShareCard({ result, onClose }) {
               background: "none", color: "#7B8294",
               border: "1px solid #2C313B", borderRadius: 14, padding: 14,
               fontSize: 14, cursor: downloading ? "default" : "pointer",
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Sora', sans-serif",
             }}
           >
             Download as image

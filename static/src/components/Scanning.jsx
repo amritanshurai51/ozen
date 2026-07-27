@@ -15,15 +15,14 @@ export default function Scanning() {
   const [stageIdx, setStageIdx] = useState(0);
 
   useEffect(() => {
-    // Eased progress — slows down as it approaches 94%
-    // Covers a 15-30 second Claude response window naturally
+    // Eased progress — slows down as it approaches 80%
     const iv = setInterval(() => {
       setPct((p) => {
         if (p >= 94) return p; // soft ceiling — never reaches 100 until real response
-        // Slow down as we approach 94 — cubic easing
-        const remaining = 94 - p;
-        const increment = Math.max(0.08, remaining * 0.018);
-        return Math.min(94, p + increment);
+        // Slow down as it approaches 80 
+        const remaining = 80 - p;
+        const increment = Math.max(0.8, remaining * 0.18);
+        return Math.min(80, p + increment);
       });
     }, 120);
     return () => clearInterval(iv);
@@ -75,7 +74,7 @@ export default function Scanning() {
       <div style={{ width: "100%", maxWidth: 300 }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
           <span style={{ fontSize: 12, color: C.muted }}>Analysing</span>
-          <span style={{ fontSize: 12, color: C.indigoBright, fontFamily: "'Syne', sans-serif" }}>
+          <span style={{ fontSize: 12, color: C.indigoBright, fontFamily: "'Sora', sans-serif" }}>
             {Math.round(pct)}%
           </span>
         </div>

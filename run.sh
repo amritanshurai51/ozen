@@ -17,6 +17,7 @@ if [ "$1" == "--build" ]; then
   # Add this line after npm run build in run.sh:
   cp "$ROOT/static/sample.jpg" "$ROOT/static/dist/sample.jpg"
   cp "$ROOT/static/src/logo.jpeg" "$ROOT/static/dist/logo.jpeg" 
+  cp -r "$ROOT/static/products" "$ROOT/static/dist/products"
   
   echo "✅ Build done"
 fi

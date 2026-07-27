@@ -1,52 +1,60 @@
-# At the top, import:
-from app.services.database import create_tables, save_scan, create_user, get_user_by_email, verify_password
-
 from fastapi import FastAPI, File, Form, UploadFile, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
-from PIL import Image
 import io,os
 
 from fastapi import Header
+from supabase import create_client
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.validate.input_form import InputForm
 from app.services.claude import Claude_Analyser
 
+from app.services.database import connect_db, save_scan, create_user, get_user_by_email, verify_password
+
+
+
 app = FastAPI()
 
+RAILWAY_ORIGIN = os.getenv("ALLOWED_ORIGIN", "")
+ 
+ALLOWED_ORIGINS = [
+    "http://localhost:8000",       # local production build
+    "http://localhost:5173",       # local vite dev server
+]
+if RAILWAY_ORIGIN:
+    ALLOWED_ORIGINS.append(RAILWAY_ORIGIN)
+ 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],          
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"]
+)
+ 
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"]         = "DENY"
+    response.headers["Referrer-Policy"]          = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"]       = "camera=self"
+    return response
+ 
+connect_db()
 
 
-# Right after app = FastAPI(), call once on startup:
-create_tables()
-
-# ------------------------------------------------------------------
-# Static files (frontend)
-# ------------------------------------------------------------------
-# @app.get("/")
-# async def root():
-#     # return FileResponse("static/new_index.html")
-#     return FileResponse("/static/index.html")
-
-# app.mount("/static", StaticFiles(directory="static"), name="static")
-# Replace your current static mount with this:
-
-# ------------------------------------------------------------------
-# Rate limiting (in-memory — fine for 30 users)
-# ------------------------------------------------------------------
 scan_counts_by_ip = {}
 MAX_SCANS_PER_IP = 2
 
-import jwt as pyjwt
-import requests
-from functools import lru_cache
-from supabase import create_client
 
 SUPABASE_URL = os.getenv("SUPABASE_CONN_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")
 supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-MAX_SCANS_FREE = 4  # free tier limit per user
+MAX_SCANS_FREE = 20
 
 
 def get_user_id_from_token(authorization: str | None) -> str | None:
@@ -57,7 +65,6 @@ def get_user_id_from_token(authorization: str | None) -> str | None:
         response = supabase_client.auth.get_user(token)
         return response.user.id if response.user else None
     except Exception as e:
-        print(f"Token error: {e}")
         return None
 
 def get_user_scan_count(user_id: str) -> int:
@@ -71,12 +78,11 @@ def get_user_scan_count(user_id: str) -> int:
 def get_client_ip(request: Request) -> str:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
-        return forwarded.split(",")[-1].strip()
+        return forwarded.split(",")[0].strip()
     return request.client.host
 
 def validate_user(request: Request) -> bool:
     ip = get_client_ip(request)
-    print("IP",ip,"SCAN COUNT: ",scan_counts_by_ip)
     return scan_counts_by_ip.get(ip, 0) <= MAX_SCANS_PER_IP
 
 def record_scan(request: Request):
@@ -84,10 +90,6 @@ def record_scan(request: Request):
     scan_counts_by_ip[ip] = scan_counts_by_ip.get(ip, 0) + 1
 
 
-
-# ------------------------------------------------------------------
-# Singleton Claude client
-# ------------------------------------------------------------------
 analyser = Claude_Analyser()
 
 
@@ -96,7 +98,7 @@ async def scan(
     request: Request,
     quiz_data: str = Form(...),
     images: list[UploadFile] = File(...),
-    authorization: str = Header(None)   # ← add this
+    authorization: str = Header(None) 
 ):
     # Get user from JWT if logged in
     user_id = get_user_id_from_token(authorization)
@@ -109,7 +111,8 @@ async def scan(
                 "error": f"You have used all {MAX_SCANS_FREE} free scans. Thank you for testing!"
             })
     else:
-        if not validate_user(request):  # fall back to IP limit for guests
+        # fall back to IP limit for guests
+        if not validate_user(request):
             return JSONResponse(status_code=429, content={
                 "error": "Scan limit reached. Create an account to track your scans."
             })
@@ -128,11 +131,11 @@ async def scan(
             return JSONResponse(status_code=400, content={"error": "Each image must be under 10 MB."})
         image_list.append({"bytes": data, "type": img.content_type})
     
-    result = analyser.score_analysis(images=image_list, quiz_data=form.to_claude_dict())
+    result = analyser.analysis(images=image_list, quiz_data=form.to_claude_dict())
 
     del image_list
 
-    # 5. Check for Claude errors
+    # Check for Claude errors
     if result.get("error"):
         return JSONResponse(status_code=502, content={"error": result["message"]})
     
@@ -141,8 +144,11 @@ async def scan(
         return JSONResponse(status_code=400, content={"error": result["image_check"]})
 
 
-    # At the end, save with real user_id:
     save_scan(quiz_data=form.to_claude_dict(), result=result, user_id=user_id)
+    
+    if not user_id:
+        record_scan(request)
+
     return result
 
 
@@ -176,14 +182,6 @@ async def login(request: Request):
     return {"ok": True, "user": {"id": user["id"], "name": user["name"], "email": user["email"]}}
 
 
-@app.get("/test-limit")
-async def test_limit(request: Request):
-    if not validate_user(request):
-        return JSONResponse(status_code=429, content={"error": "Limit reached"})
-    record_scan(request)
-    ip = get_client_ip(request)
-    count = scan_counts_by_ip.get(ip, 0)
-    return {"scans_used": count, "max": MAX_SCANS_PER_IP}
 
 
 
