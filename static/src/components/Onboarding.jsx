@@ -149,6 +149,16 @@ const STEPS = [
     ],
   },
   {
+    id: "routine_preference",
+    title: "What kind of skincare routine would you like",
+    sub: "",
+    type: "singleChoice",
+    options: [
+      { value: "Western Beauty", label: "Western Beauty", icon: "western" },
+      { value: "K-Beauty", label: "K-Beauty", icon: "kbeauty" },
+    ],
+  },
+  {
     id: "personalization",
     eyebrow: "A LITTLE MORE ABOUT YOU",
     title: "Help us personalize your experience",
@@ -162,9 +172,12 @@ const STEPS = [
     sub: "",
     type: "faceAreas",
     options: [
-      { value: "Whole Face", label: "Whole Face" },
+      { value: "Hair", label: "Hair" },
+      { value: "Eyebrows", label: "Eyebrows" },
       { value: "Cheeks", label: "Cheeks" },
+      { value: "Whole Face", label: "Whole Face" },
       { value: "Eyes", label: "Eyes" },
+      { value: "Teeth", label: "Teeth" },
       { value: "Chin", label: "Chin" },
     ],
   },
@@ -301,13 +314,28 @@ function renderOptionIcon(icon) {
   return icon;
 }
 
-function OptionButton({ label, icon, selected, onClick, detail, circle = false }) {
+const LARGE_RADIUS_STEP_IDS = new Set([
+  "identity_gender",
+  "identity_ethnicity",
+  "skin_concerns",
+  "routine_products",
+  "routine_preference",
+  "body",
+  "budget",
+  "fitness",
+]);
+
+function getOptionRadius(stepId) {
+  return LARGE_RADIUS_STEP_IDS.has(stepId) ? 30 : 18;
+}
+
+function OptionButton({ label, icon, selected, onClick, detail, circle = false, borderRadius = 18 }) {
   return (
     <button
       onClick={onClick}
       style={{
         width: "100%",
-        borderRadius: 18,
+        borderRadius,
         border: `1px solid ${selected ? "#7386FF" : "#E7E7EC"}`,
         background: selected ? "#F6F7FF" : "#FFFFFF",
         minHeight: detail ? 74 : 54,
@@ -354,6 +382,7 @@ function SingleStep({ step, value, setValue, onAfterSelect }) {
           label={option.label}
           icon={option.icon}
           selected={value === option.value}
+          borderRadius={getOptionRadius(step.id)}
           onClick={() => {
             setValue(option.value);
             onAfterSelect?.(option.value);
@@ -374,10 +403,29 @@ function SingleDetailedStep({ step, value, setValue, onAfterSelect }) {
           detail={option.desc}
           icon={renderMiniIcon(option.icon, option.iconWidth, option.iconHeight)}
           selected={value === option.value}
+          borderRadius={getOptionRadius(step.id)}
           onClick={() => {
             setValue(option.value);
             onAfterSelect?.(option.value);
           }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SingleChoiceStep({ step, value, setValue }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {step.options.map((option) => (
+        <OptionButton
+          key={option.value}
+          label={option.label}
+          icon={renderMiniIcon(option.icon)}
+          selected={value === option.value}
+          borderRadius={getOptionRadius(step.id)}
+          onClick={() => setValue(option.value)}
+          circle
         />
       ))}
     </div>
@@ -410,6 +458,7 @@ function MultiStep({ step, value = [], setValue }) {
           label={option.label}
           icon={renderMiniIcon(option.icon)}
           selected={value.includes(option.value)}
+          borderRadius={getOptionRadius(step.id)}
           onClick={() => toggle(option)}
           circle
         />
@@ -500,7 +549,7 @@ function LocationStep({ step, value, setValue }) {
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: "#17181F" }}>
+            <div style={{ fontSize: 14, fontWeight: 400, color: "#17181F" }}>
               {locating ? "Detecting location..." : "Use Current Location"}
             </div>
             <div style={{ fontSize: 12, color: "#6F7487", marginTop: 2 }}>Detect your city automatically</div>
@@ -511,12 +560,12 @@ function LocationStep({ step, value, setValue }) {
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 22, color: "#8C8FA1" }}>
         <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#F1F1F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="6.5" y="10.2" width="11" height="8.3" rx="1.8" stroke="#7D8292" strokeWidth="1.7" />
-            <path d="M8.8 10.2V8.5a3.2 3.2 0 1 1 6.4 0v1.7" stroke="#7D8292" strokeWidth="1.7" strokeLinecap="round" />
-          </svg>
+          <svg width="80" height="77" viewBox="0 0 80 77" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="80" height="77" rx="38.5" fill="#EAEAEA"/>
+<path d="M26.5 63C25.2625 63 24.2035 62.5528 23.323 61.6583C22.4425 60.7638 22.0015 59.6872 22 58.4286V35.5714C22 34.3143 22.441 33.2385 23.323 32.344C24.205 31.4495 25.264 31.0015 26.5 31H28.75V26.4286C28.75 23.2667 29.8472 20.5718 32.0417 18.344C34.2362 16.1162 36.889 15.0015 40 15C43.111 14.9985 45.7645 16.1131 47.9605 18.344C50.1565 20.5749 51.253 23.2697 51.25 26.4286V31H53.5C54.7375 31 55.7972 31.448 56.6792 32.344C57.5612 33.24 58.0015 34.3158 58 35.5714V58.4286C58 59.6857 57.5597 60.7623 56.6792 61.6583C55.7987 62.5543 54.739 63.0015 53.5 63H26.5ZM43.1792 50.2297C44.0597 49.3337 44.5 48.2571 44.5 47C44.5 45.7429 44.0597 44.667 43.1792 43.7726C42.2987 42.8781 41.239 42.4301 40 42.4286C38.761 42.427 37.702 42.875 36.823 43.7726C35.944 44.6701 35.503 45.7459 35.5 47C35.497 48.2541 35.938 49.3307 36.823 50.2297C37.708 51.1288 38.767 51.576 40 51.5714C41.233 51.5669 42.2927 51.1196 43.1792 50.2297ZM33.25 31H46.75V26.4286C46.75 24.5238 46.0937 22.9048 44.7812 21.5714C43.4687 20.2381 41.875 19.5714 40 19.5714C38.125 19.5714 36.5312 20.2381 35.2187 21.5714C33.9062 22.9048 33.25 24.5238 33.25 26.4286V31Z" fill="#696969"/>
+</svg>
         </span>
-        <div style={{ fontSize: 12, lineHeight: 1.45 }}>Your location is used only to personalize your experience and is never shared.</div>
+        <div style={{ fontSize: 13, lineHeight: 1.45 }}>Your location is used only to personalize your experience and is never shared.</div>
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 18 }}>
@@ -553,7 +602,7 @@ function PersonalizationCard({ icon, title, placeholder, value, onChange }) {
           {icon}
         </div>
         <div>
-          <div style={{ fontSize: 15, lineHeight: 1.35, fontWeight: 500, color: "#17181F" }}>{title}</div>
+          <div style={{ fontSize: 15, lineHeight: 1.35, fontWeight: 400, color: "#17181F" }}>{title}</div>
           <div style={{ fontSize: 12, color: "#8C8FA1", marginTop: 3 }}>Optional</div>
         </div>
       </div>
@@ -564,13 +613,12 @@ function PersonalizationCard({ icon, title, placeholder, value, onChange }) {
         placeholder={placeholder}
         style={{
           width: "100%",
-          minHeight: 104,
+          minHeight: 40,
           resize: "none",
           border: "none",
           outline: "none",
           padding: 0,
           fontSize: 14,
-          lineHeight: 1.6,
           color: "#5C6280",
           background: "transparent",
         }}
@@ -631,6 +679,7 @@ function BodyStep({ value = {}, setValue, step }) {
               key={option}
               label={option}
               selected={value.type === option}
+              borderRadius={getOptionRadius(step.id)}
               onClick={() => setValue({ ...value, type: option })}
             />
           ))}
@@ -663,6 +712,16 @@ function BodyStep({ value = {}, setValue, step }) {
 }
 
 function FaceAreaStep({ step, value, setValue }) {
+  const positions = {
+    Hair: { right: -6, top: 70 },
+    Eyebrows: { right: -6, top: 114 },
+    Eyes: { right: -6, top: 158 },
+    Cheeks: { left: -6, top: 158 },
+    Teeth: { left: -6, top: 202 },
+    Chin: { left: -6, top: 246 },
+    "Whole Face": { left: "50%", bottom: -34, transform: "translateX(-50%)", width: 144 },
+  };
+
   return (
     <div style={{ paddingTop: 6 }}>
       <div style={{
@@ -670,7 +729,7 @@ function FaceAreaStep({ step, value, setValue }) {
         width: "100%",
         maxWidth: 360,
         margin: "0 auto",
-        minHeight: 390,
+        minHeight: 432,
       }}>
         <div style={{
           position: "absolute",
@@ -696,37 +755,31 @@ function FaceAreaStep({ step, value, setValue }) {
           <FaceOverlay selected={value} />
         </div>
 
-        <div style={{ position: "absolute", right: 0, top: 98, width: 132 }}>
-          <AreaChoice
-            label="Whole Face"
-            selected={value === "Whole Face"}
-            onClick={() => setValue("Whole Face")}
-          />
-        </div>
+        {step.options.map((option) => {
+          const position = positions[option.value];
+          if (!position) return null;
 
-        <div style={{ position: "absolute", left: 0, top: 146, width: 132 }}>
-          <AreaChoice
-            label="Cheeks"
-            selected={value === "Cheeks"}
-            onClick={() => setValue("Cheeks")}
-          />
-        </div>
-
-        <div style={{ position: "absolute", right: 0, top: 146, width: 132 }}>
-          <AreaChoice
-            label="Eyes"
-            selected={value === "Eyes"}
-            onClick={() => setValue("Eyes")}
-          />
-        </div>
-
-        <div style={{ position: "absolute", left: 0, top: 194, width: 132 }}>
-          <AreaChoice
-            label="Chin"
-            selected={value === "Chin"}
-            onClick={() => setValue("Chin")}
-          />
-        </div>
+          return (
+            <div
+              key={option.value}
+              style={{
+                position: "absolute",
+                width: position.width || 132,
+                left: position.left,
+                right: position.right,
+                top: position.top,
+                bottom: position.bottom,
+                transform: position.transform,
+              }}
+            >
+              <AreaChoice
+                label={option.label}
+                selected={value === option.value}
+                onClick={() => setValue(option.value)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -766,9 +819,9 @@ function AreaChoice({ label, selected, onClick }) {
 }
 
 function FaceOverlay({ selected }) {
-  const activeStroke = "#FFF25F";
+  const activeStroke = "#B7281F";
   const inactiveStroke = "transparent";
-  const activeFill = "rgba(255, 242, 95, 0.18)";
+  const activeFill = "rgba(201, 44, 32, 0.72)";
   const inactiveFill = "transparent";
 
   return (
@@ -788,6 +841,25 @@ function FaceOverlay({ selected }) {
         stroke={selected === "Whole Face" ? activeStroke : inactiveStroke}
         strokeWidth="14"
         strokeLinejoin="round"
+      />
+      <path
+        d="M208 154 C266 72, 370 28, 474 30 C580 28, 685 74, 744 158 C732 200, 698 248, 638 274 C576 238, 524 220, 474 220 C425 220, 373 238, 310 274 C251 248, 217 200, 208 154 Z"
+        fill={selected === "Hair" ? activeFill : inactiveFill}
+        stroke={selected === "Hair" ? activeStroke : inactiveStroke}
+        strokeWidth="12"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M242 402 C312 364, 383 350, 446 360 C412 410, 328 426, 242 402 Z"
+        fill={selected === "Eyebrows" ? activeFill : inactiveFill}
+        stroke={selected === "Eyebrows" ? activeStroke : inactiveStroke}
+        strokeWidth="10"
+      />
+      <path
+        d="M500 360 C563 350, 634 364, 704 402 C618 426, 534 410, 500 360 Z"
+        fill={selected === "Eyebrows" ? activeFill : inactiveFill}
+        stroke={selected === "Eyebrows" ? activeStroke : inactiveStroke}
+        strokeWidth="10"
       />
       <path
         d="M218 520 C282 468, 368 468, 430 512 C400 610, 328 678, 233 691 C189 655, 187 569, 218 520 Z"
@@ -818,6 +890,12 @@ function FaceOverlay({ selected }) {
         fill={selected === "Chin" ? activeFill : inactiveFill}
         stroke={selected === "Chin" ? activeStroke : inactiveStroke}
         strokeWidth="12"
+      />
+      <path
+        d="M366 706 C406 682, 532 682, 574 706 C560 758, 518 786, 470 790 C422 786, 380 758, 366 706 Z"
+        fill={selected === "Teeth" ? activeFill : inactiveFill}
+        stroke={selected === "Teeth" ? activeStroke : inactiveStroke}
+        strokeWidth="10"
       />
     </svg>
   );
@@ -986,6 +1064,7 @@ function normalizeAnswers(state) {
     routine: {
       routine,
       products,
+      routinePreference: state.routine_preference || "",
       oilDry: state.routine_skin_type || "",
       sensitiveResistant: state.routine_sensitive || "",
       concerns: state.skin_concerns || [],
@@ -1003,6 +1082,9 @@ function normalizeAnswers(state) {
 function isValid(step, value) {
   if (step.type === "multi") {
     return Array.isArray(value) && value.length >= (step.min || 1);
+  }
+  if (step.type === "singleChoice") {
+    return !!value;
   }
   if (step.type === "location") {
     return !!String(value || "").trim();
@@ -1224,11 +1306,29 @@ function renderMiniIcon(type, width = 24, height = 24) {
   //   );
   // }
 
+  if (type === "western") {
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 10.5h16M6.7 8.2l1.1-2.7h8.4l1.1 2.7M7.4 10.5v6.1A1.4 1.4 0 0 0 8.8 18h6.4a1.4 1.4 0 0 0 1.4-1.4v-6.1" stroke={stroke} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 14h6" stroke={stroke} strokeWidth="1.7" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  if (type === "kbeauty") {
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M10 4.5h4l.8 2.1v2.2c0 .5.2 1 .5 1.3l.7.8c.3.4.5.8.5 1.3v5.3A1.5 1.5 0 0 1 15.5 19h-7A1.5 1.5 0 0 1 7 17.5v-5.3c0-.5.2-.9.5-1.3l.7-.8c.3-.3.5-.8.5-1.3V6.6l.8-2.1Z" stroke={stroke} strokeWidth="1.7" strokeLinejoin="round"/>
+        <path d="M9.4 14.1h5.2" stroke={stroke} strokeWidth="1.7" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+
   return <span style={{ fontSize: 18, color: stroke }}>•</span>;
 }
 
 function StepRenderer({ step, value, setValue, onAfterSelect }) {
   if (step.type === "single") return <SingleStep step={step} value={value} setValue={setValue} onAfterSelect={onAfterSelect} />;
+  if (step.type === "singleChoice") return <SingleChoiceStep step={step} value={value} setValue={setValue} />;
   if (step.type === "singleDetailed") return <SingleDetailedStep step={step} value={value} setValue={setValue} onAfterSelect={onAfterSelect} />;
   if (step.type === "multi") return <MultiStep step={step} value={value} setValue={setValue} />;
   if (step.type === "location") return <LocationStep step={step} value={value} setValue={setValue} />;
@@ -1315,7 +1415,7 @@ export default function Onboarding({ onComplete, onBack }) {
               {step.eyebrow}
             </div>
           ) : null}
-          <h1 style={{ margin: "0 0 10px", fontSize: 24, lineHeight: 1.15, fontWeight: 500 }}>
+          <h1 style={{ margin: "0 0 10px", fontSize: 24, lineHeight: 1.15, fontWeight: 400 }}>
             {step.title}
           </h1>
           {step.sub ? (
@@ -1346,7 +1446,7 @@ export default function Onboarding({ onComplete, onBack }) {
                 width: "100%",
                 minHeight: 52,
                 border: "none",
-                borderRadius: 18,
+                borderRadius: 30,
                 background: valid ? "#202A95" : "#C9CDE8",
                 color: "#FFFFFF",
                 fontSize: 16,

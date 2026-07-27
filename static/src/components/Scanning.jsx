@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { C, OzenWordmark, GLOBAL_CSS } from "../brand.jsx";
+import React, { useEffect, useState } from "react";
+import loaderGif from "../assets/loader ozen.gif";
 
 const STAGES = [
   "Detecting faces across all four angles",
@@ -11,94 +11,127 @@ const STAGES = [
 ];
 
 export default function Scanning() {
-  const [pct,      setPct]      = useState(0);
+  const [pct, setPct] = useState(0);
   const [stageIdx, setStageIdx] = useState(0);
+  const [gifTick, setGifTick] = useState(0);
 
   useEffect(() => {
-    // Eased progress — slows down as it approaches 80%
     const iv = setInterval(() => {
       setPct((p) => {
-        if (p >= 94) return p; // soft ceiling — never reaches 100 until real response
-        // Slow down as it approaches 80 
+        if (p >= 94) return p;
         const remaining = 80 - p;
         const increment = Math.max(0.8, remaining * 0.18);
         return Math.min(80, p + increment);
       });
     }, 120);
+
     return () => clearInterval(iv);
   }, []);
 
   useEffect(() => {
-    setStageIdx(Math.min(
-      Math.floor((pct / 94) * STAGES.length),
-      STAGES.length - 1
-    ));
+    setStageIdx(
+      Math.min(Math.floor((pct / 94) * STAGES.length), STAGES.length - 1)
+    );
   }, [pct]);
 
+  useEffect(() => {
+    const gifRefresh = setInterval(() => {
+      setGifTick((tick) => tick + 1);
+    }, 4500);
+
+    return () => clearInterval(gifRefresh);
+  }, []);
+
   return (
-    <div style={{
-      minHeight: "100vh", background: C.bg,
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      gap: 32, padding: 24,
-    }}>
-      <style>{GLOBAL_CSS}</style>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#ffffff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "32px 24px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 320,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <img
+          key={gifTick}
+          src={loaderGif}
+          alt="Scanning loader"
+          style={{
+            width: 86,
+            height: 86,
+            objectFit: "contain",
+            marginBottom: 22,
+            animation: "loaderNudge 4.5s linear infinite",
+          }}
+        />
 
-      <OzenWordmark size={18} />
+        <div style={{ width: "100%", maxWidth: 220 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 8,
+              fontSize: 11,
+              fontWeight: 600,
+              color: "#17181f",
+            }}
+          >
+            <span>Analysing</span>
+            <span>{Math.round(pct)}%</span>
+          </div>
 
-      {/* spinner */}
-      <div style={{ position: "relative", width: 140, height: 140 }}>
-        <div style={{
-          position: "absolute", inset: 0, borderRadius: "50%",
-          border: `3px solid ${C.line}`,
-          borderTopColor: C.indigoBright,
-          animation: "spin 1s linear infinite",
-        }} />
-        <div style={{
-          position: "absolute", inset: 20, borderRadius: "50%",
-          border: `2.5px solid ${C.line}`,
-          borderBottomColor: C.indigo,
-          animation: "spinR 1.5s linear infinite",
-        }} />
-        <div style={{
-          position: "absolute", inset: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <svg width="36" height="36" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="48" fill={C.ice} />
-            <path d="M50 14 a36 36 0 0 1 0 72 a26 26 0 0 0 0 -52 a18 18 0 0 1 0 36 Z" fill={C.indigo} />
-          </svg>
+          <div
+            style={{
+              height: 6,
+              borderRadius: 999,
+              background: "#dedfe5",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: `${pct}%`,
+                height: "100%",
+                borderRadius: 999,
+                background: "#2a31ad",
+                transition: "width .6s cubic-bezier(.22,1,.36,1)",
+              }}
+            />
+          </div>
         </div>
+
+        <p
+          key={stageIdx}
+          style={{
+            margin: "16px 0 0",
+            fontSize: 11,
+            fontWeight: 600,
+            color: "#17181f",
+            textAlign: "center",
+          }}
+        >
+          {STAGES[stageIdx]}...
+        </p>
       </div>
 
-      {/* progress bar */}
-      <div style={{ width: "100%", maxWidth: 300 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: C.muted }}>Analysing</span>
-          <span style={{ fontSize: 12, color: C.indigoBright, fontFamily: "'Sora', sans-serif" }}>
-            {Math.round(pct)}%
-          </span>
-        </div>
-        <div style={{ height: 4, background: C.line, borderRadius: 2, overflow: "hidden" }}>
-          <div style={{
-            height: "100%", borderRadius: 2,
-            background: `linear-gradient(90deg, ${C.indigo}, ${C.indigoBright})`,
-            width: `${pct}%`,
-            transition: "width .6s cubic-bezier(.22,1,.36,1)",
-          }} />
-        </div>
-      </div>
-
-      {/* current stage */}
-      <div key={stageIdx} style={{
-        fontSize: 14, color: C.iceDim, textAlign: "center",
-        animation: "fade .4s ease",
-      }}>
-        {STAGES[stageIdx]}…
-      </div>
-
-      <p style={{ fontSize: 11, color: C.muted, textAlign: "center", maxWidth: 280, lineHeight: 1.6 }}>
-        Analysing across all four angles simultaneously. This takes 15–30 seconds.
-      </p>
+      <style>{`
+        @keyframes loaderNudge {
+          0% { transform: rotate(0deg); }
+          85% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
