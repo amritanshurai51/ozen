@@ -388,26 +388,26 @@ function FullResultsReport({ result, onReset, onDashboard }) {
           style={{
             background: "linear-gradient(135deg, #25235E 0%, #2D2A6F 44%, #4239A1 100%)",
             borderRadius: 40,
-            padding: "28px 26px 24px",
+            padding: "24px 20px 20px",
             color: "#EDF0FF",
             boxShadow: "0 30px 80px rgba(44, 42, 111, 0.34)",
             marginBottom: 28,
           }}
         >
-          <div style={{ fontSize: 14, letterSpacing: 4, color: "#A7B2F4", fontWeight: 700, marginBottom: 24 }}>YOUR SIX-STEP PROTOCOL</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+          <div style={{ fontSize: 10, letterSpacing: 3, color: "#A7B2F4", fontWeight: 700, marginBottom: 18 }}>YOUR SIX-STEP PROTOCOL</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {protocol.slice(0, 6).map((step, index) => (
-              <div key={index} style={{ display: "grid", gridTemplateColumns: "72px 1fr", gap: 18, alignItems: "flex-start" }}>
+              <div key={index} style={{ display: "grid", gridTemplateColumns: "44px 1fr", gap: 12, alignItems: "flex-start" }}>
                 <div
                   style={{
-                    width: 72,
-                    height: 72,
+                    width: 34,
+                    height: 34,
                     borderRadius: "50%",
                     background: "linear-gradient(180deg, #7065FF 0%, #8D68FF 100%)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 24,
+                    fontSize: 16,
                     fontWeight: 700,
                     color: "#FFFFFF",
                     flexShrink: 0,
@@ -415,7 +415,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
                 >
                   {index + 1}
                 </div>
-                <div style={{ fontSize: 20, lineHeight: 1.6, color: "#E7EBFF" }}>{step}</div>
+                <div style={{ fontSize: 14, lineHeight: 1.55, color: "#E7EBFF", paddingTop: 2 }}>{step}</div>
               </div>
             ))}
           </div>
@@ -431,7 +431,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
               border: "none",
               background: "linear-gradient(90deg, #4E47F8 0%, #6C2BFF 100%)",
               color: "#FFFFFF",
-              fontSize: 28,
+              fontSize: 18,
               fontWeight: 700,
               cursor: "pointer",
               boxShadow: "0 22px 50px rgba(108, 43, 255, 0.28)",
@@ -451,7 +451,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
             border: "1px solid #DCE1EE",
             background: "#FFFFFF",
             color: "#394764",
-            fontSize: 28,
+            fontSize: 18,
             fontWeight: 700,
             cursor: "pointer",
             boxShadow: "0 18px 40px rgba(45, 52, 80, 0.10)",
