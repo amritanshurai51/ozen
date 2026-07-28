@@ -111,7 +111,7 @@ function buildProtocol(result, focusAreas) {
 
 function ProgressBar({ score, color }) {
   return (
-    <div style={{ height: 18, borderRadius: 999, background: "#E9EBF2", overflow: "hidden" }}>
+    <div style={{ height: 12, borderRadius: 999, background: "#E9EBF2", overflow: "hidden" }}>
       <div
         style={{
           width: `${Math.max(0, Math.min(100, (score / 10) * 100))}%`,
@@ -121,6 +121,52 @@ function ProgressBar({ score, color }) {
         }}
       />
     </div>
+  );
+}
+
+function CircularCheckbox() {
+  return (
+    <span
+      style={{
+        position: "relative",
+        width: 27,
+        height: 27,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
+    >
+      <input
+        type="checkbox"
+        checked
+        readOnly
+        aria-label="Completed step"
+        style={{
+          appearance: "none",
+          WebkitAppearance: "none",
+          width: 27,
+          height: 27,
+          margin: 0,
+          border: "none",
+          borderRadius: "50%",
+          background: "#5C3FF1",
+          cursor: "default",
+        }}
+      />
+      <span
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          width: 12,
+          height: 7,
+          borderLeft: "3px solid #FFFFFF",
+          borderBottom: "3px solid #FFFFFF",
+          transform: "translateY(-1px) rotate(-45deg)",
+          pointerEvents: "none",
+        }}
+      />
+    </span>
   );
 }
 
@@ -273,9 +319,9 @@ function FullResultsReport({ result, onReset, onDashboard }) {
               padding: "0 14px",
               fontSize: 12,
               cursor: "pointer",
-              boxShadow: "0 10px 20px rgba(41, 50, 93, 0.06)",
             }}
           >
+            
             Start over
           </button>
         </div>
@@ -295,7 +341,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
         </div>
 
         <ReportCard style={{ marginBottom: 18, background: "#FFF7E6", borderColor: "#F5D98F", boxShadow: "none" }}>
-          <div style={{ fontSize: 12, lineHeight: 1.6, color: "#7B5A16" }}>
+          <div style={{ fontSize: 13, lineHeight: 1.6, color: "#7B5A16" }}>
             {result.disclaimer || "Results are indicative and subject to image quality, lighting and angle. This is not medical advice and should be used only as a directional grooming and skincare guide."}
           </div>
         </ReportCard>
@@ -306,14 +352,14 @@ function FullResultsReport({ result, onReset, onDashboard }) {
             <div style={{ fontSize: 18, fontWeight: 700, color: overallColor }}>{overall.toFixed(1)}</div>
           </div>
           <ProgressBar score={overall} color={reportScoreColor(overall)} />
-          <div style={{ marginTop: 14, fontSize: 12, lineHeight: 1.55, color: "#8B93AB" }}>
+          <div style={{ marginTop: 14, fontSize: 13, lineHeight: 1.55, color: "#8B93AB" }}>
             Analysis is based on a single front-facing photo across multiple weighted facial dimensions and normalized against a peer reference set.
           </div>
         </ReportCard>
 
         <ReportCard style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 10, letterSpacing: 2.4, color: "#8B97B8", fontWeight: 700, marginBottom: 12 }}>SUMMARY</div>
-          <div style={{ fontSize: 14, lineHeight: 1.75, color: "#33415E" }}>
+          <div style={{ fontSize: 13, lineHeight: 1.75, color: "#33415E" }}>
             {topStrengths.length > 0 ? (
               <p style={{ margin: "0 0 14px" }}>
                 <strong style={{ color: "#1F2B46" }}>What works for you:</strong> {topStrengths.join(", ")}.
@@ -349,33 +395,28 @@ function FullResultsReport({ result, onReset, onDashboard }) {
             return (
               <ReportCard key={`${area.area}-${index}`} style={{ padding: 26 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: "#24304B", letterSpacing: "-0.04em" }}>{area.area}</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color }}>{area.score.toFixed(1)}</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: "#24304B", letterSpacing: "-0.04em" }}>{area.area}</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color }}>{area.score.toFixed(1)}</div>
                 </div>
                 <ProgressBar score={area.score} color={color} />
-                <div style={{ marginTop: 22, fontSize: 18, lineHeight: 1.75, color: "#4B5B79" }}>{area.description}</div>
+                <div style={{ marginTop: 22, fontSize: 13, lineHeight: 1.75, color: "#4B5B79" }}>{area.description}</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 26 }}>
                   {area.steps.slice(0, 3).map((step, stepIndex) => (
                     <div key={stepIndex} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
                       <div
                         style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: "50%",
-                          background: "#6C45F2",
-                          color: "#FFFFFF",
+                          width: 42,
+                          height: 42,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: 24,
-                          lineHeight: 1,
                           flexShrink: 0,
                           marginTop: 2,
                         }}
                       >
-                        ✓
+                        <CircularCheckbox />
                       </div>
-                      <div style={{ fontSize: 16, lineHeight: 1.7, color: "#44536F" }}>{step}</div>
+                      <div style={{ fontSize: 13, lineHeight: 1.55, color: "#44536F" }}>{step}</div>
                     </div>
                   ))}
                 </div>
@@ -387,10 +428,9 @@ function FullResultsReport({ result, onReset, onDashboard }) {
         <div
           style={{
             background: "linear-gradient(135deg, #25235E 0%, #2D2A6F 44%, #4239A1 100%)",
-            borderRadius: 40,
-            padding: "24px 20px 20px",
+            borderRadius: 20,
+            padding: "24px 24px 20px",
             color: "#EDF0FF",
-            boxShadow: "0 30px 80px rgba(44, 42, 111, 0.34)",
             marginBottom: 28,
           }}
         >
@@ -400,14 +440,14 @@ function FullResultsReport({ result, onReset, onDashboard }) {
               <div key={index} style={{ display: "grid", gridTemplateColumns: "44px 1fr", gap: 12, alignItems: "flex-start" }}>
                 <div
                   style={{
-                    width: 34,
-                    height: 34,
+                    width: 30,
+                    height: 30,
                     borderRadius: "50%",
                     background: "linear-gradient(180deg, #7065FF 0%, #8D68FF 100%)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: 700,
                     color: "#FFFFFF",
                     flexShrink: 0,
@@ -415,7 +455,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
                 >
                   {index + 1}
                 </div>
-                <div style={{ fontSize: 14, lineHeight: 1.55, color: "#E7EBFF", paddingTop: 2 }}>{step}</div>
+                <div style={{ fontSize: 13, lineHeight: 1.55, color: "#E7EBFF", paddingTop: 2 }}>{step}</div>
               </div>
             ))}
           </div>
@@ -426,15 +466,15 @@ function FullResultsReport({ result, onReset, onDashboard }) {
             onClick={onDashboard}
             style={{
               width: "100%",
-              minHeight: 72,
-              borderRadius: 30,
+              minHeight: 54,
+              borderRadius: 15,
               border: "none",
               background: "linear-gradient(90deg, #4E47F8 0%, #6C2BFF 100%)",
               color: "#FFFFFF",
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: 700,
               cursor: "pointer",
-              boxShadow: "0 22px 50px rgba(108, 43, 255, 0.28)",
+              boxShadow: "rgba(22, 0.2, 55, 0.2) 0px 9px 9px;",
               marginBottom: 20,
             }}
           >
@@ -446,8 +486,8 @@ function FullResultsReport({ result, onReset, onDashboard }) {
           onClick={onReset}
           style={{
             width: "100%",
-            minHeight: 72,
-            borderRadius: 30,
+            minHeight: 54,
+            borderRadius: 15,
             border: "1px solid #DCE1EE",
             background: "#FFFFFF",
             color: "#394764",

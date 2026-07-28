@@ -70,6 +70,7 @@ export default function Disclaimer({ onAccept, onBack }) {
               fontSize: 18,
               cursor: "pointer",
               boxShadow: LIGHT_SURFACE_SHADOW,
+              padding: "0px 0px 8px 0px",
             }}
             aria-label="Back"
           >
@@ -95,7 +96,18 @@ export default function Disclaimer({ onAccept, onBack }) {
             fontSize: 16,
             flexShrink: 0,
           }}>
-            ▲
+          <svg width="111" height="98" viewBox="0 0 111 98" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M55.5 4.625L4.625 92.5H106.375L55.5 4.625Z" fill="url(#paint0_linear_192_920)" stroke="#F5BA50" stroke-width="9.25" stroke-linejoin="round"/>
+          <path d="M55.5 74V76.3125M55.5 37L55.5185 60.125" stroke="black" stroke-width="9.25" stroke-linecap="round"/>
+          <defs>
+          <linearGradient id="paint0_linear_192_920" x1="55.5" y1="4.625" x2="55.5" y2="92.5" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FAE191"/>
+          <stop offset="0.5" stop-color="#FEDD7C"/>
+          <stop offset="1" stop-color="#F8CC3C"/>
+          </linearGradient>
+          </defs>
+          </svg>
+
           </div>
           <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 500 }}>
             Disclaimer & Consent
@@ -203,8 +215,7 @@ function Section({ section, delay }) {
 
 function CheckRow({ checked, onChange, label }) {
   return (
-    <div
-      onClick={onChange}
+    <label
       style={{
         display: "flex",
         gap: 12,
@@ -217,24 +228,28 @@ function CheckRow({ checked, onChange, label }) {
         cursor: "pointer",
       }}
     >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        style={{
+          width: 16,
+          height: 16,
+          margin: "2px 0 0",
+          flexShrink: 0,
+          accentColor: "#202A95",
+          cursor: "pointer",
+        }}
+      />
       <div style={{
-        width: 16,
-        height: 16,
-        borderRadius: 5,
-        background: checked ? "#202A95" : "#FFFFFF",
-        border: `1.5px solid ${checked ? "#202A95" : "#C9CDDA"}`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         marginTop: 2,
-        flexShrink: 0,
+        minHeight: 16,
       }}>
-        {checked ? <span style={{ color: "#FFFFFF", fontSize: 10, lineHeight: 1 }}>✓</span> : null}
       </div>
       <div style={{ fontSize: 13, lineHeight: 1.55, color: "#8C8FA1", userSelect: "none" }}>
         {label}
       </div>
-    </div>
+    </label>
   );
 }
 
