@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { GLOBAL_CSS } from "../brand.jsx";
 import faceAreaGuide from "../assets/face-area-guide.svg";
 import femaleFaceAreaGuide from "../assets/image 47.svg";
@@ -223,6 +223,73 @@ const STEPS = [
   },
 ];
 
+const CITY_COUNTRY_RULES = [
+  { match: ["dubai", "abu dhabi", "sharjah", "ajman", "ras al khaimah", "fujairah", "umm al quwain", "al ain", "uae", "united arab emirates"], country: "UAE" },
+  { match: ["riyadh", "jeddah", "dammam", "mecca", "medina", "khobar", "saudi", "saudi arabia", "ksa"], country: "Saudi Arabia" },
+  { match: ["doha", "qatar"], country: "Qatar" },
+  { match: ["bengaluru", "bangalore", "mumbai", "delhi", "new delhi", "kochi", "chennai", "hyderabad", "pune", "kolkata", "india"], country: "India" },
+  { match: ["new york", "los angeles", "chicago", "houston", "san francisco", "usa", "united states"], country: "United States" },
+  { match: ["london", "manchester", "birmingham", "united kingdom", "uk", "england"], country: "United Kingdom" },
+];
+
+const BUDGET_OPTIONS_BY_COUNTRY = {
+  UAE: [
+    { value: "Under AED 200", label: "Under AED 200" },
+    { value: "AED 200 - 500", label: "AED 200 - 500" },
+    { value: "AED 500 - 1500", label: "AED 500 - 1500" },
+    { value: "AED 1500+", label: "AED 1500+" },
+  ],
+  "Saudi Arabia": [
+    { value: "Under SAR 200", label: "Under SAR 200" },
+    { value: "SAR 200 - 500", label: "SAR 200 - 500" },
+    { value: "SAR 500 - 1500", label: "SAR 500 - 1500" },
+    { value: "SAR 1500+", label: "SAR 1500+" },
+  ],
+  Qatar: [
+    { value: "Under QAR 200", label: "Under QAR 200" },
+    { value: "QAR 200 - 500", label: "QAR 200 - 500" },
+    { value: "QAR 500 - 1500", label: "QAR 500 - 1500" },
+    { value: "QAR 1500+", label: "QAR 1500+" },
+  ],
+  India: [
+    { value: "Under INR 2,000", label: "Under INR 2,000" },
+    { value: "INR 2,000 - 5,000", label: "INR 2,000 - 5,000" },
+    { value: "INR 5,000 - 15,000", label: "INR 5,000 - 15,000" },
+    { value: "INR 15,000+", label: "INR 15,000+" },
+  ],
+  "United States": [
+    { value: "Under USD 50", label: "Under USD 50" },
+    { value: "USD 50 - 150", label: "USD 50 - 150" },
+    { value: "USD 150 - 400", label: "USD 150 - 400" },
+    { value: "USD 400+", label: "USD 400+" },
+  ],
+  "United Kingdom": [
+    { value: "Under GBP 40", label: "Under GBP 40" },
+    { value: "GBP 40 - 120", label: "GBP 40 - 120" },
+    { value: "GBP 120 - 300", label: "GBP 120 - 300" },
+    { value: "GBP 300+", label: "GBP 300+" },
+  ],
+};
+
+function getCountryFromCity(city = "") {
+  const normalized = String(city).trim().toLowerCase();
+  if (!normalized) return "UAE";
+
+  const match = CITY_COUNTRY_RULES.find((rule) =>
+    rule.match.some((term) => normalized.includes(term))
+  );
+
+  return match?.country || "UAE";
+}
+
+function getBudgetOptionsByCity(city = "") {
+  const country = getCountryFromCity(city);
+  return {
+    country,
+    options: BUDGET_OPTIONS_BY_COUNTRY[country] || BUDGET_OPTIONS_BY_COUNTRY.UAE,
+  };
+}
+
 const shellStyle = {
   minHeight: "100vh",
   background: "linear-gradient(180deg, #F7F7FA 0%, #F2F3F7 100%)",
@@ -239,7 +306,7 @@ const fieldStyle = {
   fontSize: 15,
   color: "#111111",
   outline: "none",
-  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
+  boxShadow: "0 2px 3px rgba(0, 0, 0, 0.15)",
 };
 
 function ProgressBar({ step, total }) {
@@ -348,7 +415,7 @@ function OptionButton({ label, icon, selected, onClick, detail, circle = false, 
         alignItems: detail ? "flex-start" : "center",
         gap: 14,
         cursor: "pointer",
-        boxShadow: "0 8px 20px rgba(15, 23, 42, 0.05)",
+        boxShadow: "0 2px 3px rgba(0, 0, 0, 0.15)",
       }}
       >
       {icon ? (
@@ -599,7 +666,7 @@ function LocationStep({ step, value, setValue }) {
 
 function PersonalizationCard({ icon, title, placeholder, value, onChange }) {
   return (
-    <div style={{ borderRadius: 22, border: "1px solid #E7E7EC", background: "#FFFFFF", boxShadow: "0 10px 26px rgba(15, 23, 42, 0.05)", padding: 16 }}>
+    <div style={{ borderRadius: 22, border: "1px solid #E7E7EC", background: "#FFFFFF", boxShadow: "0 2px 3px rgba(0, 0, 0, 0.15)", padding: 16 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
         <div style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid #E5E8F2", display: "flex", alignItems: "center", justifyContent: "center", color: "#6E7CFF", flexShrink: 0 }}>
           {icon}
@@ -1355,7 +1422,15 @@ export default function Onboarding({ onComplete, onBack }) {
   const [answers, setAnswers] = useState({});
   const [dir, setDir] = useState(1);
 
-  const step = STEPS[stepIndex];
+  const budgetConfig = getBudgetOptionsByCity(answers.climate || "");
+  const step =
+    STEPS[stepIndex]?.id === "budget"
+      ? {
+          ...STEPS[stepIndex],
+          options: budgetConfig.options,
+          sub: `So you get products you'd actually buy in ${budgetConfig.country}.`,
+        }
+      : STEPS[stepIndex];
   const value = answers[step.id];
   const valid = isValid(step, value);
   const hideContinue = !!step.autoAdvance;
@@ -1363,6 +1438,19 @@ export default function Onboarding({ onComplete, onBack }) {
   const setValue = (nextValue) => {
     setAnswers((current) => ({ ...current, [step.id]: nextValue }));
   };
+
+  useEffect(() => {
+    const currentBudget = answers.budget;
+    if (!currentBudget) return;
+
+    const validBudgetValues = budgetConfig.options.map((option) => option.value);
+    if (validBudgetValues.includes(currentBudget)) return;
+
+    setAnswers((current) => {
+      if (!current.budget || validBudgetValues.includes(current.budget)) return current;
+      return { ...current, budget: "" };
+    });
+  }, [answers.budget, budgetConfig.options]);
 
   const handleBack = () => {
     if (stepIndex === 0) {
