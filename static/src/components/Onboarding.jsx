@@ -73,12 +73,16 @@ const STEPS = [
         label: "Sensitive",
         desc: "My skin reacts quickly. Prone to redness, dryness, itching, and irritation.",
         icon: "feather",
+        iconWidth: 56,
+        iconHeight: 56,
       },
       {
         value: "resistant",
         label: "Non-sensitive",
         desc: "Comfortable with most skincare ingredients and products.",
         icon: "shield",
+        iconWidth: 56,
+        iconHeight: 56,
       },
     ],
   },
@@ -94,28 +98,32 @@ const STEPS = [
         label: "Oily skin",
         desc: "Excess amount of sebum(oil), shiny, enlarged pores, prone to breakouts",
         icon: "drop",
+        iconWidth: 64,
+        iconHeight: 44,
       },
       {
         value: "normal",
         label: "Normal skin",
         desc: "Neither too oily nor dry, with a smooth texture and minimal imperfections.",
         icon: "sparkle",
+        iconWidth: 64,
+        iconHeight: 44,
       },
       {
         value: "dry",
         label: "Dry skin",
         desc: "Often appears dull, rough, or flaky may feel uncomfortable after cleansing.",
         icon: Dryskin,
-        iconWidth: 38,
-        iconHeight: 28,
+        iconWidth: 56,
+        iconHeight: 40,
       },
       {
         value: "combination",
         label: "Combination skin",
         desc: "T-zone(forehead, nose, and chin) oiliness while the cheeks feel normal or dry.",
         icon: Combinationskin,
-        iconWidth: 38,
-        iconHeight: 28,
+        iconWidth: 56,
+        iconHeight: 40,
       },
     ],
   },
@@ -396,7 +404,24 @@ const LARGE_RADIUS_STEP_IDS = new Set([
 ]);
 
 function getOptionRadius(stepId) {
+  if (stepId === "routine_sensitive" || stepId === "routine_skin_type") return 50;
   return LARGE_RADIUS_STEP_IDS.has(stepId) ? 30 : 18;
+}
+
+function withSizedIcon(iconNode, width, height) {
+  if (!React.isValidElement(iconNode)) return iconNode;
+  return React.cloneElement(iconNode, {
+    width,
+    height,
+    style: {
+      width: "-webkit-fill-available",
+      maxWidth: width,
+      height,
+      objectFit: "contain",
+      display: "block",
+      ...(iconNode.props.style || {}),
+    },
+  });
 }
 
 function OptionButton({ label, icon, selected, onClick, detail, circle = false, borderRadius = 18 }) {
@@ -419,7 +444,7 @@ function OptionButton({ label, icon, selected, onClick, detail, circle = false, 
       }}
       >
       {icon ? (
-        <div style={{ width: detail ? 38 : 20, display: "flex", justifyContent: "center", flexShrink: 0, paddingTop: detail ? 3 : 0 }}>
+        <div style={{ width: detail ? 60 : 20, display: "flex", justifyContent: "center", flexShrink: 0, paddingTop: detail ? 3 : 0 }}>
           {renderOptionIcon(icon)}
         </div>
       ) : null}
@@ -471,7 +496,7 @@ function SingleDetailedStep({ step, value, setValue, onAfterSelect }) {
           key={option.value}
           label={option.label}
           detail={option.desc}
-          icon={renderMiniIcon(option.icon, option.iconWidth, option.iconHeight)}
+          icon={withSizedIcon(renderMiniIcon(option.icon, option.iconWidth, option.iconHeight), option.iconWidth || 24, option.iconHeight || 24)}
           selected={value === option.value}
           borderRadius={getOptionRadius(step.id)}
           onClick={() => {
@@ -678,6 +703,7 @@ function PersonalizationCard({ icon, title, placeholder, value, onChange }) {
       </div>
 
       <textarea
+        className="personalization-textarea"
         value={value || ""}
         onChange={(e) => onChange(e.target.value.slice(0, 300))}
         placeholder={placeholder}
@@ -1493,38 +1519,63 @@ export default function Onboarding({ onComplete, onBack }) {
 
   return (
     <div style={shellStyle}>
-      <style>{GLOBAL_CSS}</style>
-      <div style={{ maxWidth: 420, minHeight: "100vh", margin: "0 auto", background: "#FFFFFF", padding: "26px 20px 132px", position: "relative" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-          <BackButton onClick={handleBack} />
-          <div style={{ flex: 1 }}>
-            <ProgressBar step={stepIndex} total={STEPS.length} />
+      <style>{GLOBAL_CSS + `
+        .personalization-textarea::placeholder {
+          color: #B8BECC;
+        }
+        .onboarding-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .onboarding-scroll::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      <div style={{ maxWidth: 420, height: "100vh", margin: "0 auto", background: "#FFFFFF", position: "relative", display: "flex", flexDirection: "column" }}>
+        <div style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 2,
+          background: "#FFFFFF",
+          padding: "26px 20px 8px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <BackButton onClick={handleBack} />
+            <div style={{ flex: 1 }}>
+              <ProgressBar step={stepIndex} total={STEPS.length} />
+            </div>
           </div>
         </div>
 
-        <div
-          key={step.id}
-          style={{
-            animation: `${dir > 0 ? "slideInR" : "slideInL"} .28s ease`,
-          }}
-        >
-          {step.eyebrow ? (
-            <div style={{ margin: "0 0 10px", fontSize: 11, letterSpacing: 2.2, color: "#9AA0B4" }}>
-              {step.eyebrow}
-            </div>
-          ) : null}
-          <h1 style={{ margin: "0 0 10px", fontSize: 24, lineHeight: 1.15, fontWeight: 400 }}>
-            {step.title}
-          </h1>
-          {step.sub ? (
-            <p style={{ margin: "0 0 26px", fontSize: 13, lineHeight: 1.45, color: "#000000", fontWeight: 400, maxWidth: 340 }}>
-              {step.sub}
-            </p>
-          ) : (
-            <div style={{ height: 18 }} />
-          )}
+        <div className="onboarding-scroll" style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "0 20px 132px",
+        }}>
+          <div
+            key={step.id}
+            style={{
+              animation: `${dir > 0 ? "slideInR" : "slideInL"} .28s ease`,
+            }}
+          >
+            {step.eyebrow ? (
+              <div style={{ margin: "0 0 10px", fontSize: 11, letterSpacing: 2.2, color: "#9AA0B4" }}>
+                {step.eyebrow}
+              </div>
+            ) : null}
+            <h1 style={{ margin: "0 0 10px", fontSize: 24, lineHeight: 1.15, fontWeight: 400 }}>
+              {step.title}
+            </h1>
+            {step.sub ? (
+              <p style={{ margin: "0 0 26px", fontSize: 13, lineHeight: 1.45, color: "#000000", fontWeight: 400, maxWidth: 340 }}>
+                {step.sub}
+              </p>
+            ) : (
+              <div style={{ height: 18 }} />
+            )}
 
-          <StepRenderer step={step} value={value} setValue={setValue} onAfterSelect={handleAutoAdvance} answers={answers} />
+            <StepRenderer step={step} value={value} setValue={setValue} onAfterSelect={handleAutoAdvance} answers={answers} />
+          </div>
         </div>
 
         {!hideContinue && (

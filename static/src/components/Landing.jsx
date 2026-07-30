@@ -1,5 +1,6 @@
 import React from "react";
-import { GLOBAL_CSS, LIGHT_SURFACE_BORDER, LIGHT_SURFACE_SHADOW, OzenLogo } from "../brand.jsx";
+import { GLOBAL_CSS, LIGHT_SURFACE_BORDER, LIGHT_SURFACE_SHADOW } from "../brand.jsx";
+import landingLogo from "../../../image/Logo blue transparent.png";
 
 export default function Landing({ onStart }) {
   return (
@@ -53,11 +54,17 @@ export default function Landing({ onStart }) {
           boxShadow: LIGHT_SURFACE_SHADOW,
           animation: "rise .55s ease both",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 28 }}>
-            <div style={{ animation: "landingFloat 5s ease-in-out infinite" }}>
-              <OzenLogo size={34} />
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 2, color: "#151515" }}>OZEN</div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
+            <img
+              src={landingLogo}
+              alt="OZEN"
+              style={{
+                width: 125,
+                maxWidth: "100%",
+                height: "auto",
+                display: "block",
+              }}
+            />
           </div>
 
           <div style={{ padding: "2px 6px 0" }}>
