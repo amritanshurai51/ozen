@@ -61,24 +61,26 @@ export default function App() {
 
   const handleCaptureComplete = (data) => {
     setCaptureData(data);
-    if (REQUIRE_SIGNUP && !user) {
-      setShowSignup(true);
-      return;
-    }
     setScreen("disclaimer");
   };
 
-  // After auth during analysis flow — continue with the saved journey data
+  // After signup during analysis flow — run analysis immediately
   const handleSignupDone = (signedInUser) => {
     setUser(signedInUser);
     setShowSignup(false);
-    setScreen("disclaimer");
+    runAnalysis(captureData);
   };
 
-  // If the auth gate is ever closed, send the user back to capture.
+  // Dismissed signup 
   const handleSignupDismiss = () => {
     setShowSignup(false);
-    setScreen("capture");
+    runAnalysis(captureData);
+  };
+
+  // After login from landing page auth button — go to dashboard
+  const handleAuthDone = (signedInUser) => {
+    setUser(signedInUser);
+    setScreen("dashboard");
   };
 
   const handleSignOut = async () => {
@@ -117,6 +119,53 @@ export default function App() {
   };
 
 
+// function mapAnswersToForm(answers) {
+//   // Sleep hours from bed/wake times
+//   const bedParts  = answers.sleep?.bed?.split(":").map(Number)  || [23, 0];
+//   const wakeParts = answers.sleep?.wake?.split(":").map(Number) || [7, 0];
+//   const bedMins   = bedParts[0] * 60 + bedParts[1];
+//   const wakeMins  = wakeParts[0] * 60 + wakeParts[1];
+//   let sleepHours  = (wakeMins - bedMins) / 60;
+//   if (sleepHours < 0) sleepHours += 24;
+
+//   const genderMap = { "Male": "m", "Female": "f" };
+//   const uaeCities = ["Abu Dhabi", "Dubai", "Sharjah", "Doha", "Riyadh", "Jeddah"];
+//   const currency  = uaeCities.includes(answers.climate) ? "aed" : "inr";
+
+//   return {
+//     // identity
+//     age:                  parseInt(answers.identity?.age) || 25,
+//     gender:               genderMap[answers.identity?.gender] || "m",
+//     ethnicity:            answers.identity?.ethnicity || "Indian / South Asian",
+//     city:                 answers.climate || "Dubai",
+//     // body
+//     body_type:            answers.body?.type || "Average",
+//     height:               parseFloat(answers.body?.height) || 170,
+//     weight:               parseFloat(answers.body?.weight) || 70,
+//     // skincare — Baumann axes from routine step
+//     skincare_routine:     answers.routine?.routine || "None",
+//     skin_products:        (answers.routine?.products || []).join(", ") || null,
+//     oil_dry:              answers.routine?.oilDry || "oily",
+//     sensitive_resistant:  answers.routine?.sensitiveResistant || "resistant",
+//     // lifestyle
+//     water_intake:         answers.water || "3–5 glasses",
+//     spf_habit:            answers.spf?.habit || "Sometimes",
+//     spf_level:            answers.spf?.level || null,
+//     // hair
+//     hair_type:            answers.hairType || "Straight",
+//     hair_texture:         answers.hairTexture || "Medium",
+//     // budget & fitness
+//     monthly_budget:       answers.budget || "AED 200–500",
+//     currency:             currency,
+//     gym_fitness:          answers.fitness || "Not training",
+//     // sleep
+//     sleep_bed:            answers.sleep?.bed || "23:00",
+//     sleep_wake:           answers.sleep?.wake || "07:00",
+//     sleep_hours:          Math.round(sleepHours * 10) / 10,
+//   };
+// }
+
+
 function mapAnswersToForm(answers) {
   // Sleep hours from bed/wake times
   const bedParts  = answers.sleep?.bed?.split(":").map(Number)  || [23, 0];
@@ -126,40 +175,52 @@ function mapAnswersToForm(answers) {
   let sleepHours  = (wakeMins - bedMins) / 60;
   if (sleepHours < 0) sleepHours += 24;
 
-  const genderMap = { "Male": "m", "Female": "f" };
+  const genderMap = { "Male": "m", "Female": "f", "Non-Binary": "nb" };   // + nb
   const uaeCities = ["Abu Dhabi", "Dubai", "Sharjah", "Doha", "Riyadh", "Jeddah"];
   const currency  = uaeCities.includes(answers.climate) ? "aed" : "inr";
+
+  const prefMap = { "K-Beauty": "k_beauty", "Western Beauty": "western" };
+  const productPreference = prefMap[answers.routine?.routinePreference] || "western";
+
+  const rawFocus = answers.routine?.focusArea;
+  const focusAreas = Array.isArray(rawFocus) ? rawFocus.join(", ") : (rawFocus || null);
 
   return {
     // identity
     age:                  parseInt(answers.identity?.age) || 25,
     gender:               genderMap[answers.identity?.gender] || "m",
-    ethnicity:            answers.identity?.ethnicity || "Indian / South Asian",
+    ethnicity:            answers.identity?.ethnicity || "Not specified",
     city:                 answers.climate || "Dubai",
     // body
     body_type:            answers.body?.type || "Average",
     height:               parseFloat(answers.body?.height) || 170,
     weight:               parseFloat(answers.body?.weight) || 70,
-    // skincare — Baumann axes from routine step
+    // skincare
     skincare_routine:     answers.routine?.routine || "None",
     skin_products:        (answers.routine?.products || []).join(", ") || null,
     oil_dry:              answers.routine?.oilDry || "oily",
     sensitive_resistant:  answers.routine?.sensitiveResistant || "resistant",
-    // lifestyle
-    water_intake:         answers.water || "3–5 glasses",
-    spf_habit:            answers.spf?.habit || "Sometimes",
+    skin_concerns:        (answers.routine?.concerns || []).join(", ") || null,       // NEW
+    focus_areas:          focusAreas,                                                 // NEW
+    // lifestyle (no question yet — honest null, not a fake value)
+    water_intake:         answers.water || null,
+    spf_habit:            answers.spf?.habit || null,
     spf_level:            answers.spf?.level || null,
-    // hair
-    hair_type:            answers.hairType || "Straight",
-    hair_texture:         answers.hairTexture || "Medium",
+    // hair (no question yet)
+    hair_type:            answers.hairType || null,
+    hair_texture:         answers.hairTexture || null,
     // budget & fitness
-    monthly_budget:       answers.budget || "AED 200–500",
+    monthly_budget:       answers.budget || "AED 200-500",
     currency:             currency,
     gym_fitness:          answers.fitness || "Not training",
     // sleep
     sleep_bed:            answers.sleep?.bed || "23:00",
     sleep_wake:           answers.sleep?.wake || "07:00",
     sleep_hours:          Math.round(sleepHours * 10) / 10,
+    // health / safety — NOW WIRED from the personalization step
+    allergies:            answers.routine?.personalization?.allergies || null,        // NEW
+    medications:          answers.routine?.personalization?.medications || null,      // NEW
+    product_preference:   productPreference,                                          // NEW
   };
 }
 
@@ -210,6 +271,7 @@ function mapAnswersToForm(answers) {
       {screen === "landing"    && (
         <Landing
           onStart={handleStart}
+          onAuthSuccess={handleAuthDone}
         />
       )}
       {screen === "disclaimer" && (
@@ -270,10 +332,9 @@ function mapAnswersToForm(answers) {
       {/* signup gate — after photos if not logged in */}
       {showSignup && (
         <SignupModal
-          initialMode="login"
+          initialMode="signup"
           onSignup={handleSignupDone}
           onDismiss={handleSignupDismiss}
-          dismissible={false}
         />
       )}
     </>

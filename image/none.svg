@@ -1,4 +1,5 @@
-<svg width="90" height="90" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M44.4999 7.5C65.2107 7.5 82.0001 24.2894 82.0001 44.9999C82.0001 65.7107 65.2107 82.5001 44.4999 82.5001C23.7894 82.5001 7 65.7107 7 44.9999C7 24.2894 23.7894 7.5 44.4999 7.5ZM44.4999 15.0001C27.9315 15.0001 14.5001 28.4315 14.5001 44.9999C14.5001 61.5686 27.9315 75 44.4999 75C61.0686 75 74.5 61.5686 74.5 44.9999C74.5 28.4315 61.0686 15.0001 44.4999 15.0001Z" fill="#96B3F5"/>
-<line x1="74.9649" y1="29.3045" x2="19.254" y2="67.3045" stroke="#96B3F5" stroke-width="8"/>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="64" cy="64" r="52" fill="#F3F5FF" stroke="#3344C9" stroke-width="6"/>
+  <path d="M43 43L85 85" stroke="#3344C9" stroke-width="8" stroke-linecap="round"/>
+  <path d="M85 43L43 85" stroke="#3344C9" stroke-width="8" stroke-linecap="round"/>
 </svg>

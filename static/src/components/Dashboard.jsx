@@ -30,7 +30,6 @@ export default function Dashboard({ user, onViewScan, onNewScan, onSignOut }) {
   const [scans,   setScans]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [err,     setErr]     = useState("");
-  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     fetchScans();
@@ -55,159 +54,6 @@ export default function Dashboard({ user, onViewScan, onNewScan, onSignOut }) {
   }
 
   const name = user.user_metadata?.name || user.email;
-  const firstName = name.split(" ")[0];
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase())
-    .join("") || "U";
-  const phone = user.user_metadata?.phone || user.phone || "+91 98765 43210";
-  const email = user.email || "Not provided";
-  const avatarUrl = user.user_metadata?.avatar_url;
-
-  if (showProfile) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#F6F7FB", color: "#111111" }}>
-        <style>{GLOBAL_CSS}</style>
-        <div style={{ maxWidth: 420, minHeight: "100vh", margin: "0 auto", background: "#FFFFFF", padding: "26px 20px 48px" }}>
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 28 }}>
-            <button
-              onClick={() => setShowProfile(false)}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 999,
-                border: "1px solid #E6E8F0",
-                background: "#FFFFFF",
-                color: "#7FA8FF",
-                fontSize: 18,
-                cursor: "pointer",
-                boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
-              }}
-            >
-              ←
-            </button>
-          </div>
-
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <h1 style={{ fontSize: 30, fontWeight: 500, margin: "0 0 8px", color: "#1A1D29" }}>
-              My Profile
-            </h1>
-            <p style={{ fontSize: 14, color: "#9AA0B4", margin: 0 }}>
-              Manage your personal information
-            </p>
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 30 }}>
-            <div style={{ position: "relative" }}>
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={name}
-                  style={{
-                    width: 92,
-                    height: 92,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    boxShadow: "0 10px 24px rgba(15, 23, 42, 0.10)",
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: 92,
-                    height: 92,
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #202A95 0%, #7FA8FF 100%)",
-                    color: "#FFFFFF",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 28,
-                    fontWeight: 700,
-                    boxShadow: "0 10px 24px rgba(15, 23, 42, 0.10)",
-                  }}
-                >
-                  {initials}
-                </div>
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  right: -2,
-                  bottom: -2,
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  background: "#8CA8FF",
-                  border: "3px solid #FFFFFF",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#FFFFFF",
-                  fontSize: 14,
-                }}
-              >
-                ○
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              { label: "Full Name", value: name },
-              { label: "Mobile Number", value: phone },
-              { label: "Email Address", value: email },
-            ].map(item => (
-              <div
-                key={item.label}
-                style={{
-                  background: "#FFFFFF",
-                  borderRadius: 18,
-                  padding: "16px 16px",
-                  boxShadow: "0 10px 28px rgba(15, 23, 42, 0.07)",
-                  border: "1px solid #F0F2F7",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 13, color: "#A1A7B8", marginBottom: 6 }}>
-                    {item.label}
-                  </div>
-                  <div style={{ fontSize: 20, color: "#2A2E3B", fontWeight: 400 }}>
-                    {item.value}
-                  </div>
-                </div>
-                <span style={{ color: "#8CA8FF", fontSize: 18, lineHeight: 1 }}>✎</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 44 }}>
-            <button
-              onClick={onSignOut}
-              style={{
-                background: "#202A95",
-                color: "#FFFFFF",
-                border: "none",
-                borderRadius: 10,
-                padding: "11px 18px",
-                fontSize: 18,
-                cursor: "pointer",
-                boxShadow: "0 10px 24px rgba(32, 42, 149, 0.24)",
-              }}
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#F6F7FB", color: "#111111" }}>
@@ -219,42 +65,24 @@ export default function Dashboard({ user, onViewScan, onNewScan, onSignOut }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
              <img src={OzenResult} alt="Ozen"  height={18}  />
           </div>
-          <button
-            onClick={() => setShowProfile(true)}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: "50%",
-              border: "1px solid #ECECF2",
-              background: avatarUrl ? "#FFFFFF" : "linear-gradient(135deg, #202A95 0%, #7FA8FF 100%)",
-              color: "#FFFFFF",
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(15, 23, 42, 0.08)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 0,
-              overflow: "hidden",
-            }}
-            aria-label="Open profile"
-            title="Profile"
-          >
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              <span style={{ fontSize: 13, fontWeight: 700 }}>{initials}</span>
-            )}
+          <button onClick={onSignOut} style={{
+            background: "#FFFFFF",
+            border: "1px solid #ECECF2",
+            color: "#444857",
+            borderRadius: 999,
+            padding: "6px 12px",
+            fontSize: 10,
+            cursor: "pointer",
+            boxShadow: "0 4px 14px rgba(15, 23, 42, 0.04)",
+          }}>
+            Sign out
           </button>
         </div>
 
         {/* welcome */}
         <div style={{ marginBottom: 26, animation: "rise .5s ease .05s both" }}>
           <h1 style={{ fontSize: 24, lineHeight: 1.15, fontWeight: 500, margin: "0 0 8px", color: "#111111" }}>
-            Hey, {firstName}
+            Hey, {name.split(" ")[0]}
           </h1>
           <p style={{ fontSize: 14, fontWeight: 400, color: "#000000", margin: 0 }}>
             {scans.length > 0

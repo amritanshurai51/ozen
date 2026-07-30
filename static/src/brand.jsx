@@ -106,7 +106,6 @@ export const GLOBAL_CSS = `
   @keyframes spinR { to{transform:rotate(-360deg);} }
   @keyframes slideInR { from{opacity:0;transform:translateX(40px);} to{opacity:1;transform:none;} }
   @keyframes slideInL { from{opacity:0;transform:translateX(-40px);} to{opacity:1;transform:none;} }
-  @keyframes barShimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
   * { box-sizing:border-box; }
   button { font-family: inherit; }
   input  { font-family: inherit; }

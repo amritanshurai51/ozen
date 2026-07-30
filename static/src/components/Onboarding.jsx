@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { GLOBAL_CSS } from "../brand.jsx";
 import faceAreaGuide from "../assets/face-area-guide.svg";
-import femaleFaceAreaGuide from "../assets/image 47.svg";
 import FirstArrow from "../../../image/material-symbols_male-rounded.svg";
 import FirstThird from "../../../image/fa7-solid_non-binary.svg";
 import FirstSecond from "../../../image/material-symbols_female.svg";
@@ -18,8 +17,6 @@ import Exfolitor from "../../../image/exfolitor.svg";
 import NoneProduct from "../../../image/none.svg";
 import Dryskin from "../../../image/dry-skin-type.svg";
 import Combinationskin from "../../../image/combination-skin-type.svg";
-import kbeautyIcon from "../../../image/k-beauty.svg";
-import WesternIcon from "../../../image/western_beauty.svg";
 
 
 const STEPS = [
@@ -157,8 +154,8 @@ const STEPS = [
     sub: "",
     type: "singleChoice",
     options: [
-      { value: "Western Beauty", label: "Western Beauty", icon: WesternIcon },
-      { value: "K-Beauty", label: "K-Beauty", icon: kbeautyIcon },
+      { value: "Western Beauty", label: "Western Beauty", icon: "western" },
+      { value: "K-Beauty", label: "K-Beauty", icon: "kbeauty" },
     ],
   },
   {
@@ -223,73 +220,6 @@ const STEPS = [
   },
 ];
 
-const CITY_COUNTRY_RULES = [
-  { match: ["dubai", "abu dhabi", "sharjah", "ajman", "ras al khaimah", "fujairah", "umm al quwain", "al ain", "uae", "united arab emirates"], country: "UAE" },
-  { match: ["riyadh", "jeddah", "dammam", "mecca", "medina", "khobar", "saudi", "saudi arabia", "ksa"], country: "Saudi Arabia" },
-  { match: ["doha", "qatar"], country: "Qatar" },
-  { match: ["bengaluru", "bangalore", "mumbai", "delhi", "new delhi", "kochi", "chennai", "hyderabad", "pune", "kolkata", "india"], country: "India" },
-  { match: ["new york", "los angeles", "chicago", "houston", "san francisco", "usa", "united states"], country: "United States" },
-  { match: ["london", "manchester", "birmingham", "united kingdom", "uk", "england"], country: "United Kingdom" },
-];
-
-const BUDGET_OPTIONS_BY_COUNTRY = {
-  UAE: [
-    { value: "Under AED 200", label: "Under AED 200" },
-    { value: "AED 200 - 500", label: "AED 200 - 500" },
-    { value: "AED 500 - 1500", label: "AED 500 - 1500" },
-    { value: "AED 1500+", label: "AED 1500+" },
-  ],
-  "Saudi Arabia": [
-    { value: "Under SAR 200", label: "Under SAR 200" },
-    { value: "SAR 200 - 500", label: "SAR 200 - 500" },
-    { value: "SAR 500 - 1500", label: "SAR 500 - 1500" },
-    { value: "SAR 1500+", label: "SAR 1500+" },
-  ],
-  Qatar: [
-    { value: "Under QAR 200", label: "Under QAR 200" },
-    { value: "QAR 200 - 500", label: "QAR 200 - 500" },
-    { value: "QAR 500 - 1500", label: "QAR 500 - 1500" },
-    { value: "QAR 1500+", label: "QAR 1500+" },
-  ],
-  India: [
-    { value: "Under INR 2,000", label: "Under INR 2,000" },
-    { value: "INR 2,000 - 5,000", label: "INR 2,000 - 5,000" },
-    { value: "INR 5,000 - 15,000", label: "INR 5,000 - 15,000" },
-    { value: "INR 15,000+", label: "INR 15,000+" },
-  ],
-  "United States": [
-    { value: "Under USD 50", label: "Under USD 50" },
-    { value: "USD 50 - 150", label: "USD 50 - 150" },
-    { value: "USD 150 - 400", label: "USD 150 - 400" },
-    { value: "USD 400+", label: "USD 400+" },
-  ],
-  "United Kingdom": [
-    { value: "Under GBP 40", label: "Under GBP 40" },
-    { value: "GBP 40 - 120", label: "GBP 40 - 120" },
-    { value: "GBP 120 - 300", label: "GBP 120 - 300" },
-    { value: "GBP 300+", label: "GBP 300+" },
-  ],
-};
-
-function getCountryFromCity(city = "") {
-  const normalized = String(city).trim().toLowerCase();
-  if (!normalized) return "UAE";
-
-  const match = CITY_COUNTRY_RULES.find((rule) =>
-    rule.match.some((term) => normalized.includes(term))
-  );
-
-  return match?.country || "UAE";
-}
-
-function getBudgetOptionsByCity(city = "") {
-  const country = getCountryFromCity(city);
-  return {
-    country,
-    options: BUDGET_OPTIONS_BY_COUNTRY[country] || BUDGET_OPTIONS_BY_COUNTRY.UAE,
-  };
-}
-
 const shellStyle = {
   minHeight: "100vh",
   background: "linear-gradient(180deg, #F7F7FA 0%, #F2F3F7 100%)",
@@ -306,7 +236,7 @@ const fieldStyle = {
   fontSize: 15,
   color: "#111111",
   outline: "none",
-  boxShadow: "0 2px 3px rgba(0, 0, 0, 0.15)",
+  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
 };
 
 function ProgressBar({ step, total }) {
@@ -415,7 +345,7 @@ function OptionButton({ label, icon, selected, onClick, detail, circle = false, 
         alignItems: detail ? "flex-start" : "center",
         gap: 14,
         cursor: "pointer",
-        boxShadow: "0 2px 3px rgba(0, 0, 0, 0.15)",
+        boxShadow: "0 8px 20px rgba(15, 23, 42, 0.05)",
       }}
       >
       {icon ? (
@@ -666,7 +596,7 @@ function LocationStep({ step, value, setValue }) {
 
 function PersonalizationCard({ icon, title, placeholder, value, onChange }) {
   return (
-    <div style={{ borderRadius: 22, border: "1px solid #E7E7EC", background: "#FFFFFF", boxShadow: "0 2px 3px rgba(0, 0, 0, 0.15)", padding: 16 }}>
+    <div style={{ borderRadius: 22, border: "1px solid #E7E7EC", background: "#FFFFFF", boxShadow: "0 10px 26px rgba(15, 23, 42, 0.05)", padding: 16 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
         <div style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid #E5E8F2", display: "flex", alignItems: "center", justifyContent: "center", color: "#6E7CFF", flexShrink: 0 }}>
           {icon}
@@ -705,13 +635,10 @@ function PersonalizationStep({ value = {}, setValue }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <PersonalizationCard
           icon={
-           <svg width="83" height="83" viewBox="0 0 83 83" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M41.4141 11.8359C41.4141 11.8359 23.6641 26.6276 23.6641 44.3776C23.6641 54.1806 31.611 62.1276 41.4141 62.1276C51.2171 62.1276 59.1641 54.1806 59.1641 44.3776C59.1641 26.6276 41.4141 11.8359 41.4141 11.8359Z" stroke="#93B2F9" stroke-width="4.14167" stroke-linejoin="round"/>
-          <path d="M41.4141 29.5859V62.1276" stroke="#93B2F9" stroke-width="4.14167" stroke-linecap="round"/>
-          <path d="M31.0625 39.9401L41.4167 29.5859L51.7708 39.9401" stroke="#93B2F9" stroke-width="4.14167" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M32.5391 50.2943L41.4141 42.8984L50.2891 50.2943" stroke="#93B2F9" stroke-width="4.14167" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 4.5c3.3 0 6 2.7 6 6 0 4.4-6 9-6 9s-6-4.6-6-9c0-3.3 2.7-6 6-6Z" stroke="currentColor" strokeWidth="1.6" />
+              <path d="M12 8.3v4.4M9.8 10.5h4.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
           }
           title="Do you have any known allergies or skin sensitivities?"
           placeholder="e.g. fragrance, nut oil (almond oil), essential oils or leave blank"
@@ -721,13 +648,10 @@ function PersonalizationStep({ value = {}, setValue }) {
 
         <PersonalizationCard
           icon={
-            <svg width="83" height="83" viewBox="0 0 83 83" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M65.0807 38.4609H17.7474C16.1136 38.4609 14.7891 39.7854 14.7891 41.4193C14.7891 43.0531 16.1136 44.3776 17.7474 44.3776H65.0807C66.7146 44.3776 68.0391 43.0531 68.0391 41.4193C68.0391 39.7854 66.7146 38.4609 65.0807 38.4609Z" stroke="#93B2F9" stroke-width="4.14167"/>
-          <path d="M35.4974 20.7109L23.6641 38.4609H59.1641L47.3307 20.7109H35.4974Z" stroke="#93B2F9" stroke-width="4.14167" stroke-linejoin="round"/>
-          <path d="M32.5417 44.375L26.625 62.125H56.2083L50.2917 44.375" stroke="#93B2F9" stroke-width="4.14167" stroke-linejoin="round"/>
-          <path d="M41.4141 34.0234C43.8648 34.0234 45.8516 32.0367 45.8516 29.5859C45.8516 27.1352 43.8648 25.1484 41.4141 25.1484C38.9633 25.1484 36.9766 27.1352 36.9766 29.5859C36.9766 32.0367 38.9633 34.0234 41.4141 34.0234Z" fill="#93B2F9"/>
-          </svg>
-
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14M12 5v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <path d="M7.2 8.2h9.6a2.2 2.2 0 0 1 2.2 2.2v3.2a2.2 2.2 0 0 1-2.2 2.2H7.2A2.2 2.2 0 0 1 5 13.6v-3.2a2.2 2.2 0 0 1 2.2-2.2Z" stroke="currentColor" strokeWidth="1.6" />
+            </svg>
           }
           title="Are you currently using any medications or active treatments?"
           placeholder="e.g. retinol, acne medication, or leave blank"
@@ -787,7 +711,7 @@ function BodyStep({ value = {}, setValue, step }) {
   );
 }
 
-function FaceAreaStep({ step, value, setValue, gender }) {
+function FaceAreaStep({ step, value, setValue }) {
   const positions = {
     Hair: { right: -6, top: 70 },
     Eyebrows: { right: -6, top: 114 },
@@ -797,7 +721,6 @@ function FaceAreaStep({ step, value, setValue, gender }) {
     Chin: { left: -6, top: 246 },
     "Whole Face": { left: "50%", bottom: -34, transform: "translateX(-50%)", width: 144 },
   };
-  const guideSrc = gender === "Female" ? femaleFaceAreaGuide : faceAreaGuide;
 
   return (
     <div style={{ paddingTop: 6 }}>
@@ -819,7 +742,7 @@ function FaceAreaStep({ step, value, setValue, gender }) {
           overflow: "hidden",
         }}>
           <img
-            src={guideSrc}
+            src={faceAreaGuide}
             alt="Face areas"
             style={{
               width: "100%",
@@ -896,9 +819,9 @@ function AreaChoice({ label, selected, onClick }) {
 }
 
 function FaceOverlay({ selected }) {
-  const activeStroke = "#E7D94B";
+  const activeStroke = "#B7281F";
   const inactiveStroke = "transparent";
-  const activeFill = "rgba(255, 240, 120, 0.42)";
+  const activeFill = "rgba(201, 44, 32, 0.72)";
   const inactiveFill = "transparent";
 
   return (
@@ -913,7 +836,7 @@ function FaceOverlay({ selected }) {
       }}
     >
       <path
-        d="M328 245 C358 176, 412 145, 470 142 C528 145, 582 176, 612 243 C638 307, 646 390, 640 480 C634 568, 621 656, 586 744 C560 806, 520 856, 470 868 C420 856, 380 806, 354 744 C319 656, 306 568, 300 480 C294 392, 302 309, 328 245 Z"
+        d="M286 216 C320 126, 394 88, 470 84 C548 86, 622 124, 656 212 C688 294, 698 398, 690 514 C682 624, 666 738, 614 844 C580 916, 527 968, 470 982 C413 968, 360 916, 326 844 C274 740, 258 624, 250 514 C242 398, 254 296, 286 216 Z"
         fill={selected === "Whole Face" ? activeFill : inactiveFill}
         stroke={selected === "Whole Face" ? activeStroke : inactiveStroke}
         strokeWidth="14"
@@ -927,49 +850,49 @@ function FaceOverlay({ selected }) {
         strokeLinejoin="round"
       />
       <path
-        d="M272 432 C324 400, 379 390, 432 398 C404 434, 342 444, 272 432 Z"
+        d="M242 402 C312 364, 383 350, 446 360 C412 410, 328 426, 242 402 Z"
         fill={selected === "Eyebrows" ? activeFill : inactiveFill}
         stroke={selected === "Eyebrows" ? activeStroke : inactiveStroke}
         strokeWidth="10"
       />
       <path
-        d="M512 398 C565 390, 620 400, 672 432 C602 444, 540 434, 512 398 Z"
+        d="M500 360 C563 350, 634 364, 704 402 C618 426, 534 410, 500 360 Z"
         fill={selected === "Eyebrows" ? activeFill : inactiveFill}
         stroke={selected === "Eyebrows" ? activeStroke : inactiveStroke}
         strokeWidth="10"
       />
       <path
-        d="M250 562 C298 526, 356 524, 408 552 C384 622, 334 664, 266 674 C232 646, 224 592, 250 562 Z"
+        d="M218 520 C282 468, 368 468, 430 512 C400 610, 328 678, 233 691 C189 655, 187 569, 218 520 Z"
         fill={selected === "Cheeks" ? activeFill : inactiveFill}
         stroke={selected === "Cheeks" ? activeStroke : inactiveStroke}
         strokeWidth="12"
       />
       <path
-        d="M532 552 C584 524, 642 526, 690 562 C716 592, 708 646, 674 674 C606 664, 556 622, 532 552 Z"
+        d="M514 512 C576 468, 662 468, 726 520 C757 569, 755 655, 711 691 C616 678, 544 610, 514 512 Z"
         fill={selected === "Cheeks" ? activeFill : inactiveFill}
         stroke={selected === "Cheeks" ? activeStroke : inactiveStroke}
         strokeWidth="12"
       />
       <path
-        d="M274 499 C320 477, 374 477, 424 495 C398 535, 338 547, 274 499 Z"
+        d="M246 468 C305 444, 379 444, 442 468 C412 522, 324 540, 246 468 Z"
         fill={selected === "Eyes" ? activeFill : inactiveFill}
         stroke={selected === "Eyes" ? activeStroke : inactiveStroke}
         strokeWidth="10"
       />
       <path
-        d="M516 495 C566 477, 620 477, 666 499 C602 547, 542 535, 516 495 Z"
+        d="M502 468 C565 444, 639 444, 698 468 C620 540, 532 522, 502 468 Z"
         fill={selected === "Eyes" ? activeFill : inactiveFill}
         stroke={selected === "Eyes" ? activeStroke : inactiveStroke}
         strokeWidth="10"
       />
       <path
-        d="M360 812 C404 780, 536 780, 580 812 C568 888, 526 942, 470 954 C414 942, 372 888, 360 812 Z"
+        d="M322 800 C380 760, 560 760, 618 800 C602 910, 545 990, 470 1008 C395 990, 338 910, 322 800 Z"
         fill={selected === "Chin" ? activeFill : inactiveFill}
         stroke={selected === "Chin" ? activeStroke : inactiveStroke}
         strokeWidth="12"
       />
       <path
-        d="M369 706 C409 682, 535 682, 577 706 C563 758, 521 786, 473 790 C425 786, 383 758, 369 706 Z"
+        d="M366 706 C406 682, 532 682, 574 706 C560 758, 518 786, 470 790 C422 786, 380 758, 366 706 Z"
         fill={selected === "Teeth" ? activeFill : inactiveFill}
         stroke={selected === "Teeth" ? activeStroke : inactiveStroke}
         strokeWidth="10"
@@ -1383,33 +1306,33 @@ function renderMiniIcon(type, width = 24, height = 24) {
   //   );
   // }
 
-  // if (type === "western") {
-  //   return (
-  //     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-  //       <path d="M4 10.5h16M6.7 8.2l1.1-2.7h8.4l1.1 2.7M7.4 10.5v6.1A1.4 1.4 0 0 0 8.8 18h6.4a1.4 1.4 0 0 0 1.4-1.4v-6.1" stroke={stroke} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-  //       <path d="M9 14h6" stroke={stroke} strokeWidth="1.7" strokeLinecap="round"/>
-  //     </svg>
-  //   );
-  // }
-  // if (type === "kbeauty") {
-  //   return (
-  //     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-  //       <path d="M10 4.5h4l.8 2.1v2.2c0 .5.2 1 .5 1.3l.7.8c.3.4.5.8.5 1.3v5.3A1.5 1.5 0 0 1 15.5 19h-7A1.5 1.5 0 0 1 7 17.5v-5.3c0-.5.2-.9.5-1.3l.7-.8c.3-.3.5-.8.5-1.3V6.6l.8-2.1Z" stroke={stroke} strokeWidth="1.7" strokeLinejoin="round"/>
-  //       <path d="M9.4 14.1h5.2" stroke={stroke} strokeWidth="1.7" strokeLinecap="round"/>
-  //     </svg>
-  //   );
-  // }
+  if (type === "western") {
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 10.5h16M6.7 8.2l1.1-2.7h8.4l1.1 2.7M7.4 10.5v6.1A1.4 1.4 0 0 0 8.8 18h6.4a1.4 1.4 0 0 0 1.4-1.4v-6.1" stroke={stroke} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 14h6" stroke={stroke} strokeWidth="1.7" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+  if (type === "kbeauty") {
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M10 4.5h4l.8 2.1v2.2c0 .5.2 1 .5 1.3l.7.8c.3.4.5.8.5 1.3v5.3A1.5 1.5 0 0 1 15.5 19h-7A1.5 1.5 0 0 1 7 17.5v-5.3c0-.5.2-.9.5-1.3l.7-.8c.3-.3.5-.8.5-1.3V6.6l.8-2.1Z" stroke={stroke} strokeWidth="1.7" strokeLinejoin="round"/>
+        <path d="M9.4 14.1h5.2" stroke={stroke} strokeWidth="1.7" strokeLinecap="round"/>
+      </svg>
+    );
+  }
 
   return <span style={{ fontSize: 18, color: stroke }}>•</span>;
 }
 
-function StepRenderer({ step, value, setValue, onAfterSelect, answers }) {
+function StepRenderer({ step, value, setValue, onAfterSelect }) {
   if (step.type === "single") return <SingleStep step={step} value={value} setValue={setValue} onAfterSelect={onAfterSelect} />;
   if (step.type === "singleChoice") return <SingleChoiceStep step={step} value={value} setValue={setValue} />;
   if (step.type === "singleDetailed") return <SingleDetailedStep step={step} value={value} setValue={setValue} onAfterSelect={onAfterSelect} />;
   if (step.type === "multi") return <MultiStep step={step} value={value} setValue={setValue} />;
   if (step.type === "location") return <LocationStep step={step} value={value} setValue={setValue} />;
-  if (step.type === "faceAreas") return <FaceAreaStep step={step} value={value} setValue={setValue} gender={answers.identity_gender} />;
+  if (step.type === "faceAreas") return <FaceAreaStep step={step} value={value} setValue={setValue} />;
   if (step.type === "body") return <BodyStep step={step} value={value} setValue={setValue} />;
   if (step.type === "sleep") return <SleepStep value={value} setValue={setValue} />;
   if (step.type === "personalize") return <PersonalizationStep value={value} setValue={setValue} />;
@@ -1422,15 +1345,7 @@ export default function Onboarding({ onComplete, onBack }) {
   const [answers, setAnswers] = useState({});
   const [dir, setDir] = useState(1);
 
-  const budgetConfig = getBudgetOptionsByCity(answers.climate || "");
-  const step =
-    STEPS[stepIndex]?.id === "budget"
-      ? {
-          ...STEPS[stepIndex],
-          options: budgetConfig.options,
-          sub: `So you get products you'd actually buy in ${budgetConfig.country}.`,
-        }
-      : STEPS[stepIndex];
+  const step = STEPS[stepIndex];
   const value = answers[step.id];
   const valid = isValid(step, value);
   const hideContinue = !!step.autoAdvance;
@@ -1438,19 +1353,6 @@ export default function Onboarding({ onComplete, onBack }) {
   const setValue = (nextValue) => {
     setAnswers((current) => ({ ...current, [step.id]: nextValue }));
   };
-
-  useEffect(() => {
-    const currentBudget = answers.budget;
-    if (!currentBudget) return;
-
-    const validBudgetValues = budgetConfig.options.map((option) => option.value);
-    if (validBudgetValues.includes(currentBudget)) return;
-
-    setAnswers((current) => {
-      if (!current.budget || validBudgetValues.includes(current.budget)) return current;
-      return { ...current, budget: "" };
-    });
-  }, [answers.budget, budgetConfig.options]);
 
   const handleBack = () => {
     if (stepIndex === 0) {
@@ -1524,7 +1426,7 @@ export default function Onboarding({ onComplete, onBack }) {
             <div style={{ height: 18 }} />
           )}
 
-          <StepRenderer step={step} value={value} setValue={setValue} onAfterSelect={handleAutoAdvance} answers={answers} />
+          <StepRenderer step={step} value={value} setValue={setValue} onAfterSelect={handleAutoAdvance} />
         </div>
 
         {!hideContinue && (
