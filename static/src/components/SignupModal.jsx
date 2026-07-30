@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabase.js";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_REGEX = /^.{6,}$/;
+
 function MailIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -70,7 +73,7 @@ function AuthField({ icon, type, placeholder, value, onChange, trailing }) {
   );
 }
 
-export default function SignupModal({ initialMode = "signup", onSignup, onDismiss }) {
+export default function SignupModal({ initialMode = "signup", onSignup, onDismiss, dismissible = true }) {
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -84,18 +87,22 @@ export default function SignupModal({ initialMode = "signup", onSignup, onDismis
   }, [initialMode]);
 
   const handleSubmit = async () => {
-    if (!email || !password) { setErr("Email and password required."); return; }
-    if (mode === "signup" && !name) { setErr("Name is required."); return; }
-    if (password.length < 6) { setErr("Password must be at least 6 characters."); return; }
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !password) { setErr("Email and password required."); return; }
+    if (mode === "signup" && !cleanName) { setErr("Username is required."); return; }
+    if (!EMAIL_REGEX.test(cleanEmail)) { setErr("Please enter a valid email address."); return; }
+    if (!MIN_PASSWORD_REGEX.test(password)) { setErr("Password must be at least 6 characters."); return; }
 
     setLoading(true);
     setErr("");
 
     if (mode === "signup") {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
-        options: { data: { name } },
+        options: { data: { name: cleanName, username: cleanName } },
       });
 
       if (error) {
@@ -106,7 +113,7 @@ export default function SignupModal({ initialMode = "signup", onSignup, onDismis
 
       if (data.user) {
         setLoading(false);
-        onSignup({ id: data.user.id, email: data.user.email, name });
+        onSignup({ id: data.user.id, email: data.user.email, name: cleanName });
       } else {
         setLoading(false);
         setErr("Check your email to confirm your account, then come back to log in.");
@@ -115,7 +122,7 @@ export default function SignupModal({ initialMode = "signup", onSignup, onDismis
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: cleanEmail,
       password,
     });
 
@@ -138,7 +145,7 @@ export default function SignupModal({ initialMode = "signup", onSignup, onDismis
   return (
     <>
       <div
-        onClick={onDismiss}
+        onClick={dismissible ? onDismiss : undefined}
         style={{
           position: "fixed",
           inset: 0,
@@ -259,6 +266,12 @@ export default function SignupModal({ initialMode = "signup", onSignup, onDismis
             />
           </div>
 
+          {!isLogin ? (
+            <p style={{ margin: "10px 4px 0", fontSize: 12, color: "#7B7B86", lineHeight: 1.5 }}>
+              Use a valid email address and a password with at least 6 characters.
+            </p>
+          ) : null}
+
           {isLogin && (
             <div style={{ textAlign: "right", marginTop: 12 }}>
               <button style={{
@@ -307,23 +320,25 @@ export default function SignupModal({ initialMode = "signup", onSignup, onDismis
             <span style={{ color: "#5B63C7" }}>Privacy Policy</span>
           </p>
 
-          <button
-            onClick={onDismiss}
-            style={{
-              width: "100%",
-              minHeight: 48,
-              marginTop: 14,
-              borderRadius: 16,
-              border: "1px solid #E5E7EB",
-              background: "#FFFFFF",
-              color: "#61616D",
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Maybe later
-          </button>
+          {dismissible ? (
+            <button
+              onClick={onDismiss}
+              style={{
+                width: "100%",
+                minHeight: 48,
+                marginTop: 14,
+                borderRadius: 16,
+                border: "1px solid #E5E7EB",
+                background: "#FFFFFF",
+                color: "#61616D",
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Maybe later
+            </button>
+          ) : null}
         </div>
       </div>
     </>

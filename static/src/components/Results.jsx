@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { GLOBAL_CSS, scoreColor10 } from "../brand.jsx";
 import OzenResult from "../../../image/Logo blue transparent 8.svg";
@@ -110,14 +110,25 @@ function buildProtocol(result, focusAreas) {
 }
 
 function ProgressBar({ score, color }) {
+  const [ready, setReady] = useState(false);
+  const width = `${Math.max(0, Math.min(100, (score / 10) * 100))}%`;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setReady(true), 80);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <div style={{ height: 12, borderRadius: 999, background: "#E9EBF2", overflow: "hidden" }}>
       <div
         style={{
-          width: `${Math.max(0, Math.min(100, (score / 10) * 100))}%`,
+          width: ready ? width : "0%",
           height: "100%",
           borderRadius: 999,
-          background: color,
+          background: `linear-gradient(90deg, ${color} 0%, #8CA8FF 55%, ${color} 100%)`,
+          backgroundSize: "200% 100%",
+          animation: "barShimmer 5.5s linear infinite",
+          transition: "width 1.5s cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       />
     </div>
@@ -287,6 +298,56 @@ function ReportCard({ children, style }) {
   );
 }
 
+function AnimatedReportCard({ children, style, index = 0, top = 96, overlap = 72 }) {
+  const cardRef = useRef(null);
+  const [visible, setVisible] = useState(index < 2);
+
+  useEffect(() => {
+    const node = cardRef.current;
+    if (!node) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+        }
+      },
+      {
+        threshold: 0.18,
+        rootMargin: "0px 0px -12% 0px",
+      }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      style={{
+        position: "sticky",
+        top: top + index * 18,
+        zIndex: 20 + index,
+        marginTop: index === 0 ? 0 : -overlap,
+        paddingTop: index === 0 ? 0 : overlap,
+        marginBottom: 18,
+      }}
+    >
+      <div
+        ref={cardRef}
+        style={{
+          transform: visible ? "translateY(0) scale(1)" : `translateY(${28 + index * 4}px) scale(0.97)`,
+          opacity: visible ? 1 : 0.72,
+          transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1), opacity 450ms ease",
+          willChange: "transform, opacity",
+        }}
+      >
+        <ReportCard style={style}>{children}</ReportCard>
+      </div>
+    </div>
+  );
+}
+
 function FullResultsReport({ result, onReset, onDashboard }) {
   const overall = Number(result.overall_score) || 0;
   const scoreEntries = getVisibleScoreEntries(result);
@@ -340,25 +401,40 @@ function FullResultsReport({ result, onReset, onDashboard }) {
           </div>
         </div>
 
-        <ReportCard style={{ marginBottom: 18, background: "#FFF7E6", borderColor: "#F5D98F", boxShadow: "none" }}>
+        <AnimatedReportCard index={0} style={{ background: "#FFF7E6", borderColor: "#F5D98F", boxShadow: "none" }}>
           <div style={{ fontSize: 13, lineHeight: 1.6, color: "#7B5A16" }}>
             {result.disclaimer || "Results are indicative and subject to image quality, lighting and angle. This is not medical advice and should be used only as a directional grooming and skincare guide."}
           </div>
-        </ReportCard>
+        </AnimatedReportCard>
 
-        <ReportCard style={{ marginBottom: 18 }}>
+        <AnimatedReportCard index={1}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ fontSize: 17, fontWeight: 700, color: "#26324C" }}>Overall Score</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: overallColor }}>{overall.toFixed(1)}</div>
           </div>
           <ProgressBar score={overall} color={reportScoreColor(overall)} />
-          <div style={{ marginTop: 14, fontSize: 13, lineHeight: 1.55, color: "#8B93AB" }}>
+          <div style={{display: "flex",gap: "3px", marginTop: 14, fontSize: 13, lineHeight: 1.55, color: "#8B93AB" }}>
+            <span><svg width="15" height="20" viewBox="0 0 35 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.2886 36.6241C25.2447 36.6241 31.6944 30.1744 31.6944 22.2183C31.6944 14.2622 25.2447 7.8125 17.2886 7.8125C9.33251 7.8125 2.88281 14.2622 2.88281 22.2183C2.88281 30.1744 9.33251 36.6241 17.2886 36.6241Z" stroke="#94A3B8" stroke-width="3.16928" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17.2891 27.9889V22.2266" stroke="#94A3B8" stroke-width="3.16928" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17.2891 16.4531H17.3028" stroke="#94A3B8" stroke-width="3.16928" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            </span>
             Analysis is based on a single front-facing photo across multiple weighted facial dimensions and normalized against a peer reference set.
           </div>
-        </ReportCard>
+        </AnimatedReportCard>
 
-        <ReportCard style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 10, letterSpacing: 2.4, color: "#8B97B8", fontWeight: 700, marginBottom: 12 }}>SUMMARY</div>
+        <AnimatedReportCard index={2}>
+
+          <div style={{display: "flex",alignItems: "center",gap: "3px", fontSize: 10, letterSpacing: 2.4, color: "#8B97B8", fontWeight: 700, marginBottom: 12 }}>
+            <span><svg width="20" height="20" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16.3695 25.5156C16.2225 24.9458 15.9255 24.4258 15.5094 24.0098C15.0934 23.5937 14.5734 23.2967 14.0036 23.1497L3.9031 20.5451C3.73078 20.4962 3.57911 20.3924 3.47112 20.2495C3.36312 20.1066 3.30469 19.9324 3.30469 19.7532C3.30469 19.5741 3.36312 19.3999 3.47112 19.2569C3.57911 19.114 3.73078 19.0102 3.9031 18.9613L14.0036 16.3551C14.5732 16.2083 15.093 15.9115 15.5091 15.4958C15.9251 15.08 16.2222 14.5604 16.3695 13.9909L18.974 3.8904C19.0225 3.7174 19.1261 3.56498 19.2693 3.45641C19.4124 3.34783 19.5871 3.28906 19.7668 3.28906C19.9464 3.28906 20.1211 3.34783 20.2643 3.45641C20.4074 3.56498 20.5111 3.7174 20.5595 3.8904L23.1624 13.9909C23.3094 14.5607 23.6064 15.0807 24.0225 15.4967C24.4385 15.9128 24.9585 16.2098 25.5283 16.3568L35.6288 18.9597C35.8025 19.0076 35.9557 19.1112 36.0648 19.2545C36.174 19.3979 36.2331 19.5731 36.2331 19.7532C36.2331 19.9334 36.174 20.1086 36.0648 20.252C35.9557 20.3953 35.8025 20.4989 35.6288 20.5468L25.5283 23.1497C24.9585 23.2967 24.4385 23.5937 24.0225 24.0098C23.6064 24.4258 23.3094 24.9458 23.1624 25.5156L20.5579 35.6161C20.5094 35.7891 20.4058 35.9415 20.2626 36.0501C20.1195 36.1587 19.9448 36.2174 19.7651 36.2174C19.5855 36.2174 19.4108 36.1587 19.2676 36.0501C19.1245 35.9415 19.0208 35.7891 18.9724 35.6161L16.3695 25.5156Z" stroke="#4F46E5" stroke-width="3.62203" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M32.9375 4.9375V11.523" stroke="#4F46E5" stroke-width="3.62203" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M36.2183 8.22656H29.6328" stroke="#4F46E5" stroke-width="3.62203" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6.58594 27.9844V31.2771" stroke="#4F46E5" stroke-width="3.62203" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8.23025 29.6328H4.9375" stroke="#4F46E5" stroke-width="3.62203" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+           </span>SUMMARY</div>
           <div style={{ fontSize: 13, lineHeight: 1.75, color: "#33415E" }}>
             {topStrengths.length > 0 ? (
               <p style={{ margin: "0 0 14px" }}>
@@ -369,9 +445,9 @@ function FullResultsReport({ result, onReset, onDashboard }) {
               <strong style={{ color: "#1F2B46" }}>What holds you back:</strong> {topWeakness?.observation || "Your lowest-scoring areas are largely routine-driven, which means they should improve with more consistent habits and better execution."}
             </p>
           </div>
-        </ReportCard>
+        </AnimatedReportCard>
 
-        <ReportCard style={{ marginBottom: 26 }}>
+        <AnimatedReportCard index={3} style={{ marginBottom: 26 }}>
           <div style={{ fontSize: 10, letterSpacing: 2.4, color: "#8B97B8", fontWeight: 700, marginBottom: 14 }}>CATEGORY BREAKDOWN</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {scoreEntries.map((item) => (
@@ -386,14 +462,14 @@ function FullResultsReport({ result, onReset, onDashboard }) {
               </div>
             ))}
           </div>
-        </ReportCard>
+        </AnimatedReportCard>
 
         <div style={{ fontSize: 14, letterSpacing: 5, color: "#8C99B7", margin: "0 0 14px 10px" }}>FOCUS AREAS</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 18, marginBottom: 24 }}>
+        <div style={{ display: "flex", flexDirection: "column", marginBottom: 24 }}>
           {focusAreas.map((area, index) => {
             const color = reportScoreColor(area.score);
             return (
-              <ReportCard key={`${area.area}-${index}`} style={{ padding: 26 }}>
+              <AnimatedReportCard key={`${area.area}-${index}`} index={index + 4} style={{ padding: 26 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
                   <div style={{ fontSize: 18, fontWeight: 600, color: "#24304B", letterSpacing: "-0.04em" }}>{area.area}</div>
                   <div style={{ fontSize: 18, fontWeight: 600, color }}>{area.score.toFixed(1)}</div>
@@ -420,7 +496,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
                     </div>
                   ))}
                 </div>
-              </ReportCard>
+              </AnimatedReportCard>
             );
           })}
         </div>

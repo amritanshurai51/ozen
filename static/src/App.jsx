@@ -61,26 +61,24 @@ export default function App() {
 
   const handleCaptureComplete = (data) => {
     setCaptureData(data);
+    if (REQUIRE_SIGNUP && !user) {
+      setShowSignup(true);
+      return;
+    }
     setScreen("disclaimer");
   };
 
-  // After signup during analysis flow — run analysis immediately
+  // After auth during analysis flow — continue with the saved journey data
   const handleSignupDone = (signedInUser) => {
     setUser(signedInUser);
     setShowSignup(false);
-    runAnalysis(captureData);
+    setScreen("disclaimer");
   };
 
-  // Dismissed signup 
+  // If the auth gate is ever closed, send the user back to capture.
   const handleSignupDismiss = () => {
     setShowSignup(false);
-    runAnalysis(captureData);
-  };
-
-  // After login from landing page auth button — go to dashboard
-  const handleAuthDone = (signedInUser) => {
-    setUser(signedInUser);
-    setScreen("dashboard");
+    setScreen("capture");
   };
 
   const handleSignOut = async () => {
@@ -212,7 +210,6 @@ function mapAnswersToForm(answers) {
       {screen === "landing"    && (
         <Landing
           onStart={handleStart}
-          onAuthSuccess={handleAuthDone}
         />
       )}
       {screen === "disclaimer" && (
@@ -273,9 +270,10 @@ function mapAnswersToForm(answers) {
       {/* signup gate — after photos if not logged in */}
       {showSignup && (
         <SignupModal
-          initialMode="signup"
+          initialMode="login"
           onSignup={handleSignupDone}
           onDismiss={handleSignupDismiss}
+          dismissible={false}
         />
       )}
     </>
