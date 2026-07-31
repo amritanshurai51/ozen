@@ -63,6 +63,7 @@ starlette==1.0.0
 storage3==2.30.1
 strenum==0.4.15
 strictyaml==1.7.3
+stripe==15.3.1
 supabase==2.30.1
 supabase-auth==2.30.1
 supabase-functions==2.30.1
