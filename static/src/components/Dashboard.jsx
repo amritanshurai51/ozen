@@ -26,7 +26,16 @@ function formatDate(iso) {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 }
 
-export default function Dashboard({ user, onViewScan, onNewScan, onSignOut }) {
+export default function Dashboard({
+  user,
+  onViewScan,
+  onNewScan,
+  scansRemaining,
+  showBuyButton,
+  onBuyScans,
+  buyingScans,
+  onSignOut,
+}) {
   const [scans,   setScans]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [err,     setErr]     = useState("");
@@ -261,7 +270,24 @@ export default function Dashboard({ user, onViewScan, onNewScan, onSignOut }) {
               ? `You have ${scans.length} scan${scans.length > 1 ? "s" : ""} on record.`
               : "No scans yet — take your first one."}
           </p>
+          {scansRemaining !== null && (
+            <p style={{ fontSize: 13, color: scansRemaining > 0 ? "#5F657A" : "#B35679", margin: "8px 0 0" }}>
+              {scansRemaining} scan{scansRemaining === 1 ? "" : "s"} remaining
+            </p>
+          )}
         </div>
+
+        {showBuyButton && (
+          <button onClick={onBuyScans} style={{
+            width: "100%", background: "#EEF4FF", color: "#1C3FAA",
+            border: "1px solid #C7D8FF", borderRadius: 14, minHeight: 50,
+            padding: "0 18px", fontSize: 16, fontWeight: 700,
+            cursor: buyingScans ? "wait" : "pointer", marginBottom: 14,
+            animation: "rise .5s ease .08s both", opacity: buyingScans ? 0.7 : 1,
+          }}>
+            {buyingScans ? "Redirecting..." : "Buy 2 More Scans"}
+          </button>
+        )}
 
         {/* new scan CTA */}
         <button onClick={onNewScan} style={{

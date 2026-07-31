@@ -54,6 +54,11 @@ async def add_security_headers(request: Request, call_next):
 connect_db()
 
 
+@app.get("/test-payments")
+async def test_payments_page():
+    return FileResponse("app/test_payments.html")
+
+
 scan_counts_by_ip = {}
 MAX_SCANS_PER_IP = 2
 
