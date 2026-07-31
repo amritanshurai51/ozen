@@ -5,6 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      "/payments": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
       "/scan": {
         target: "http://localhost:8000",
         changeOrigin: true,

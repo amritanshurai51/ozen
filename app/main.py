@@ -8,10 +8,14 @@ from fastapi import Header
 from supabase import create_client
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.validate.input_form import InputForm
+from app.validate.input_form import InputForm, ProfileForm
 from app.services.claude import Claude_Analyser
 
-from app.services.database import connect_db, save_scan, create_user, get_user_by_email, verify_password
+from app.services.database import (
+    connect_db, save_scan, get_scans_by_user,
+    save_profile, get_profile,
+    create_user, get_user_by_email, verify_password,
+)
 
 
 
@@ -21,10 +25,14 @@ RAILWAY_ORIGIN = os.getenv("ALLOWED_ORIGIN", "")
  
 ALLOWED_ORIGINS = [
     "http://localhost:8000",       # local production build
-    "http://localhost:5173",       # local vite dev server
+    "http://localhost:5173",
+    "http://localhost:5500"       # local vite dev server
 ]
 if RAILWAY_ORIGIN:
     ALLOWED_ORIGINS.append(RAILWAY_ORIGIN)
+
+from app.payments import router as payments_router, get_scans_remaining
+app.include_router(payments_router)
  
 app.add_middleware(
     CORSMiddleware,
@@ -44,6 +52,11 @@ async def add_security_headers(request: Request, call_next):
     return response
  
 connect_db()
+
+
+@app.get("/test-payments")
+async def test_payments_page():
+    return FileResponse("app/test_payments.html")
 
 
 scan_counts_by_ip = {}
@@ -93,35 +106,36 @@ def record_scan(request: Request):
 analyser = Claude_Analyser()
 
 
+
 @app.post("/scan")
 async def scan(
     request: Request,
     quiz_data: str = Form(...),
     images: list[UploadFile] = File(...),
-    authorization: str = Header(None) 
+    authorization: str = Header(None)
 ):
     # Get user from JWT if logged in
     user_id = get_user_id_from_token(authorization)
 
-    # Rate limit — DB-based for logged-in users, IP-based for guests
+    # ── Gate: check balance only (do NOT consume yet) ──
     if user_id:
-        scan_count = get_user_scan_count(user_id)
-        if scan_count >= MAX_SCANS_FREE:
-            return JSONResponse(status_code=429, content={
-                "error": f"You have used all {MAX_SCANS_FREE} free scans. Thank you for testing!"
+        if get_scans_remaining(user_id) <= 0:
+            return JSONResponse(status_code=402, content={
+                "error": "No scans remaining. Please purchase more."
             })
     else:
-        # fall back to IP limit for guests
+        # guests: IP-based limit
         if not validate_user(request):
             return JSONResponse(status_code=429, content={
                 "error": "Scan limit reached. Create an account to track your scans."
             })
 
+    # ── Validation (nothing consumed — these just return) ──
     try:
         form = InputForm.model_validate_json(quiz_data)
     except ValidationError as e:
         return JSONResponse(status_code=400, content={"error": e.errors()[0]["msg"]})
-    
+
     image_list = []
     for img in images:
         if img.content_type not in ("image/jpeg", "image/png"):
@@ -130,26 +144,63 @@ async def scan(
         if len(data) > 10 * 1024 * 1024:
             return JSONResponse(status_code=400, content={"error": "Each image must be under 10 MB."})
         image_list.append({"bytes": data, "type": img.content_type})
-    
-    result = analyser.analysis(images=image_list, quiz_data=form.to_claude_dict())
 
+    result = analyser.analysis(images=image_list, quiz_data=form.to_claude_dict())
     del image_list
 
-    # Check for Claude errors
+    # Claude error — return, balance untouched
     if result.get("error"):
         return JSONResponse(status_code=502, content={"error": result["message"]})
-    
-    # Check image validation from Claude
+
+    # Image validation from Claude — return, balance untouched
     if result.get("image_check") and result["image_check"].lower() != "pass":
         return JSONResponse(status_code=400, content={"error": result["image_check"]})
 
-
+    # ── Success: save, then consume one credit ──
     save_scan(quiz_data=form.to_claude_dict(), result=result, user_id=user_id)
-    
-    if not user_id:
+
+    if user_id:
+        supabase_client.rpc("decrement_scan_credit", {"p_user_id": user_id}).execute()
+    else:
         record_scan(request)
 
     return result
+
+
+# ── GET /profile ──────────────────────────────────────────────────────────────
+# Frontend calls this on login to fetch stored profile fields (for the profile
+# page, and to decide whether to show the full quiz or the short QuickScan).
+# Returns {"profile": <row>} or {"profile": null} if not completed yet.
+@app.get("/profile")
+async def fetch_profile(authorization: str = Header(None)):
+    user_id = get_user_id_from_token(authorization)
+    if not user_id:
+        return JSONResponse(status_code=401, content={"error": "Login required."})
+    profile = get_profile(user_id)
+    return {"profile": profile}
+
+
+# ── POST /profile ─────────────────────────────────────────────────────────────
+# Frontend calls this to save/update stable profile fields (from the profile
+# page edit, or after the first full quiz). Backend fetches user_id from JWT —
+# the frontend never sends it.
+@app.post("/profile")
+async def create_or_update_profile(request: Request, authorization: str = Header(None)):
+    user_id = get_user_id_from_token(authorization)
+    if not user_id:
+        return JSONResponse(status_code=401, content={"error": "Login required to save a profile."})
+
+    body = await request.json()
+    try:
+        form = ProfileForm(**body)
+    except ValidationError as e:
+        return JSONResponse(status_code=400, content={"error": e.errors()[0]["msg"]})
+
+    try:
+        saved = save_profile(user_id, form.model_dump())
+        return {"ok": True, "profile": saved}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": "Could not save profile.", "detail": str(e)})
 
 
 @app.post("/register")
@@ -180,9 +231,6 @@ async def login(request: Request):
     if not user or not verify_password(password, user["password"]):
         return JSONResponse(status_code=401, content={"error": "Invalid email or password."})
     return {"ok": True, "user": {"id": user["id"], "name": user["name"], "email": user["email"]}}
-
-
-
 
 
 app.mount("/", StaticFiles(directory="static/dist", html=True), name="static")
