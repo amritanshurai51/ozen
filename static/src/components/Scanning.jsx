@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import loaderGif from "../assets/loader ozen.gif";
+import OzenResult from "../../../image/Logo blue transparent 8.svg";
 
 const STAGES = [
   "Detecting faces across all four angles",
@@ -13,7 +13,6 @@ const STAGES = [
 export default function Scanning() {
   const [pct, setPct] = useState(0);
   const [stageIdx, setStageIdx] = useState(0);
-  const [gifTick, setGifTick] = useState(0);
 
   useEffect(() => {
     const iv = setInterval(() => {
@@ -33,14 +32,6 @@ export default function Scanning() {
       Math.min(Math.floor((pct / 94) * STAGES.length), STAGES.length - 1)
     );
   }, [pct]);
-
-  useEffect(() => {
-    const gifRefresh = setInterval(() => {
-      setGifTick((tick) => tick + 1);
-    }, 4500);
-
-    return () => clearInterval(gifRefresh);
-  }, []);
 
   return (
     <div
@@ -63,15 +54,16 @@ export default function Scanning() {
         }}
       >
         <img
-          key={gifTick}
-          src={loaderGif}
+          src={OzenResult}
           alt="Scanning loader"
           style={{
             width: 86,
             height: 86,
             objectFit: "contain",
             marginBottom: 22,
-            animation: "loaderNudge 4.5s linear infinite",
+            transformOrigin: "center",
+            animation: "loaderSpin 1.8s linear infinite",
+            backfaceVisibility: "hidden",
           }}
         />
 
@@ -126,10 +118,9 @@ export default function Scanning() {
       </div>
 
       <style>{`
-        @keyframes loaderNudge {
-          0% { transform: rotate(0deg); }
-          85% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes loaderSpin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
