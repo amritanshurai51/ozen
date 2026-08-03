@@ -86,6 +86,36 @@ export default function SignupModal({ initialMode = "signup", onSignup, onDismis
     setErr("");
   }, [initialMode]);
 
+  const handleForgotPassword = async () => {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      setErr("Enter your email address first.");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      setErr("Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+    setErr("");
+
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: `${window.location.origin}/`,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+
+    setErr("Password reset email sent. Check your inbox.");
+  };
+
   const handleSubmit = async () => {
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
@@ -274,15 +304,20 @@ export default function SignupModal({ initialMode = "signup", onSignup, onDismis
 
           {isLogin && (
             <div style={{ textAlign: "right", marginTop: 12 }}>
-              <button style={{
-                border: "none",
-                background: "transparent",
-                padding: 0,
-                color: "#202A95",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}>
+              <button
+                onClick={handleForgotPassword}
+                disabled={loading}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  padding: 0,
+                  color: "#202A95",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: loading ? "default" : "pointer",
+                  opacity: loading ? 0.7 : 1,
+                }}
+              >
                 Forgot password?
               </button>
             </div>

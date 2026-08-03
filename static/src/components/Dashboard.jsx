@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { C, GLOBAL_CSS, OzenLogo, scoreColor10 } from "../brand.jsx";
 import { supabase } from "../supabase.js";
 import OzenResult from "../../../image/Logo blue transparent 8.svg";
@@ -40,6 +40,13 @@ export default function Dashboard({
   const [loading, setLoading] = useState(true);
   const [err,     setErr]     = useState("");
   const [showProfile, setShowProfile] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user.user_metadata?.avatar_url || "");
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    setAvatarUrl(user.user_metadata?.avatar_url || "");
+  }, [user]);
 
   useEffect(() => {
     fetchScans();
@@ -73,7 +80,84 @@ export default function Dashboard({
     .join("") || "U";
   const phone = user.user_metadata?.phone || user.phone || "+91 98765 43210";
   const email = user.email || "Not provided";
-  const avatarUrl = user.user_metadata?.avatar_url;
+  async function updateAvatar(nextAvatarUrl) {
+    setAvatarBusy(true);
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        ...user.user_metadata,
+        avatar_url: nextAvatarUrl,
+      },
+    });
+
+    setAvatarBusy(false);
+
+    if (error) {
+      setErr("Could not update profile image. Please try again.");
+      return false;
+    }
+
+    setAvatarUrl(data.user?.user_metadata?.avatar_url || nextAvatarUrl || "");
+    setErr("");
+    return true;
+  }
+
+  function readImageAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("file-read-failed"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function loadImage(source) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("image-load-failed"));
+      image.src = source;
+    });
+  }
+
+  async function compressAvatar(file) {
+    const source = await readImageAsDataUrl(file);
+    const image = await loadImage(source);
+    const maxSize = 512;
+    const ratio = Math.min(maxSize / image.width, maxSize / image.height, 1);
+    const width = Math.max(1, Math.round(image.width * ratio));
+    const height = Math.max(1, Math.round(image.height * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0, width, height);
+    return canvas.toDataURL("image/jpeg", 0.82);
+  }
+
+  async function handleAvatarChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setErr("Please choose an image file.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const compressedAvatar = await compressAvatar(file);
+      await updateAvatar(compressedAvatar);
+    } catch (error) {
+      console.error(error);
+      setErr("Could not process this image. Please try another one.");
+    }
+
+    event.target.value = "";
+  }
+
+  async function handleRemoveAvatar() {
+    await updateAvatar("");
+  }
 
   if (showProfile) {
     return (
@@ -95,7 +179,7 @@ export default function Dashboard({
                 boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
               }}
             >
-              ←
+              ‹
             </button>
           </div>
 
@@ -141,27 +225,61 @@ export default function Dashboard({
                   {initials}
                 </div>
               )}
-              <div
-                style={{
-                  position: "absolute",
-                  right: -2,
-                  bottom: -2,
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  background: "#8CA8FF",
-                  border: "3px solid #FFFFFF",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#FFFFFF",
-                  fontSize: 14,
-                }}
-              >
-                ○
-              </div>
             </div>
           </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            style={{ display: "none" }}
+          />
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: -8, marginBottom: 26 }}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={avatarBusy}
+              style={{
+                minHeight: 40,
+                borderRadius: 999,
+                border: "1px solid #DCE3F7",
+                background: "#EEF3FF",
+                color: "#2D3CB3",
+                padding: "0 16px",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: avatarBusy ? "default" : "pointer",
+                opacity: avatarBusy ? 0.7 : 1,
+              }}
+            >
+              {avatarBusy ? "Updating..." : "Upload image"}
+            </button>
+            {avatarUrl ? (
+              <button
+                onClick={handleRemoveAvatar}
+                disabled={avatarBusy}
+                style={{
+                  minHeight: 40,
+                  borderRadius: 999,
+                  border: "1px solid #F0D7DF",
+                  background: "#FFF5F7",
+                  color: "#B35679",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: avatarBusy ? "default" : "pointer",
+                  opacity: avatarBusy ? 0.7 : 1,
+                }}
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+
+          {err ? (
+            <div style={{ marginBottom: 18, textAlign: "center", fontSize: 12, color: "#B35679" }}>{err}</div>
+          ) : null}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[

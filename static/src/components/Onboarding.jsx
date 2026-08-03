@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { GLOBAL_CSS } from "../brand.jsx";
 import faceAreaGuide from "../assets/face-area-guide.svg";
-import femaleFaceAreaGuide from "../assets/image 47.svg";
+import femaleFaceAreaGuide from "../assets/image 47.png";
 import FirstArrow from "../../../image/material-symbols_male-rounded.svg";
 import FirstThird from "../../../image/fa7-solid_non-binary.svg";
 import FirstSecond from "../../../image/material-symbols_female.svg";
@@ -20,6 +20,7 @@ import Dryskin from "../../../image/dry-skin-type.svg";
 import Combinationskin from "../../../image/combination-skin-type.svg";
 import kbeautyIcon from "../../../image/k-beauty.svg";
 import WesternIcon from "../../../image/western_beauty.svg";
+import { COUNTRY_CURRENCIES, COUNTRY_NAMES } from "../locationData.js";
 
 
 const STEPS = [
@@ -34,6 +35,12 @@ const STEPS = [
       { value: "Female", label: "Female", icon: FirstSecond },
       { value: "Non-Binary", label: "Non-Binary", icon: FirstThird },
     ],
+  },
+  {
+    id: "identity_dob",
+    title: "How old are you?",
+    sub: "From hydration to firmness, every stage of life has unique skincare needs",
+    type: "dob",
   },
   {
     id: "identity_ethnicity",
@@ -59,7 +66,6 @@ const STEPS = [
     title: "Tell us where you are based",
     sub: "Your environment and climate play a key role in how your skin behaves",
     type: "location",
-    suggestions: ["Dubai", "Abu Dhabi", "Sharjah", "Riyadh", "Jeddah", "Doha", "Bengaluru", "Mumbai", "Delhi", "Kochi"],
   },
   {
     id: "routine_sensitive",
@@ -141,6 +147,7 @@ const STEPS = [
       { value: "Fine lines", label: "Fine lines", icon: Finelines },
       { value: "Rough texture", label: "Rough texture", icon: Roughtexture },
       { value: "Pigmentation changes", label: "Pigmentation changes", icon: "petals" },
+      { value: "None", label: "None", icon: NoneProduct },
     ],
   },
   {
@@ -178,16 +185,26 @@ const STEPS = [
     optional: true,
   },
   {
+    id: "female_safety",
+    eyebrow: "A LITTLE MORE ABOUT YOU",
+    title: "Help us recommend products safely",
+    sub: "If you're pregnant or breastfeeding, we'll personalize ingredient recommendations.",
+    type: "femaleSafety",
+    optional: true,
+  },
+  {
     id: "focus_area",
     title: "What areas are you like to improve?",
     sub: "",
     type: "faceAreas",
+    min: 1,
     options: [
       { value: "Hair", label: "Hair" },
       { value: "Eyebrows", label: "Eyebrows" },
       { value: "Cheeks", label: "Cheeks" },
       { value: "Whole Face", label: "Whole Face" },
       { value: "Eyes", label: "Eyes" },
+      { value: "Lips", label: "Lips" },
       { value: "Teeth", label: "Teeth" },
       { value: "Chin", label: "Chin" },
     ],
@@ -232,69 +249,79 @@ const STEPS = [
 ];
 
 const CITY_COUNTRY_RULES = [
-  { match: ["dubai", "abu dhabi", "sharjah", "ajman", "ras al khaimah", "fujairah", "umm al quwain", "al ain", "uae", "united arab emirates"], country: "UAE" },
-  { match: ["riyadh", "jeddah", "dammam", "mecca", "medina", "khobar", "saudi", "saudi arabia", "ksa"], country: "Saudi Arabia" },
-  { match: ["doha", "qatar"], country: "Qatar" },
-  { match: ["bengaluru", "bangalore", "mumbai", "delhi", "new delhi", "kochi", "chennai", "hyderabad", "pune", "kolkata", "india"], country: "India" },
-  { match: ["new york", "los angeles", "chicago", "houston", "san francisco", "usa", "united states"], country: "United States" },
-  { match: ["london", "manchester", "birmingham", "united kingdom", "uk", "england"], country: "United Kingdom" },
+  { match: ["dubai", "abu dhabi", "sharjah", "ajman", "ras al khaimah", "fujairah", "umm al quwain", "al ain", "uae", "united arab emirates"], countryCode: "AE" },
+  { match: ["riyadh", "jeddah", "dammam", "mecca", "medina", "khobar", "saudi", "saudi arabia", "ksa"], countryCode: "SA" },
+  { match: ["doha", "qatar"], countryCode: "QA" },
+  { match: ["bengaluru", "bangalore", "mumbai", "delhi", "new delhi", "kochi", "chennai", "hyderabad", "pune", "kolkata", "india"], countryCode: "IN" },
+  { match: ["new york", "los angeles", "chicago", "houston", "san francisco", "usa", "united states"], countryCode: "US" },
+  { match: ["london", "manchester", "birmingham", "united kingdom", "uk", "england"], countryCode: "GB" },
 ];
 
-const BUDGET_OPTIONS_BY_COUNTRY = {
-  UAE: [
-    { value: "Under AED 200", label: "Under AED 200" },
-    { value: "AED 200 - 500", label: "AED 200 - 500" },
-    { value: "AED 500 - 1500", label: "AED 500 - 1500" },
-    { value: "AED 1500+", label: "AED 1500+" },
-  ],
-  "Saudi Arabia": [
-    { value: "Under SAR 200", label: "Under SAR 200" },
-    { value: "SAR 200 - 500", label: "SAR 200 - 500" },
-    { value: "SAR 500 - 1500", label: "SAR 500 - 1500" },
-    { value: "SAR 1500+", label: "SAR 1500+" },
-  ],
-  Qatar: [
-    { value: "Under QAR 200", label: "Under QAR 200" },
-    { value: "QAR 200 - 500", label: "QAR 200 - 500" },
-    { value: "QAR 500 - 1500", label: "QAR 500 - 1500" },
-    { value: "QAR 1500+", label: "QAR 1500+" },
-  ],
-  India: [
-    { value: "Under INR 2,000", label: "Under INR 2,000" },
-    { value: "INR 2,000 - 5,000", label: "INR 2,000 - 5,000" },
-    { value: "INR 5,000 - 15,000", label: "INR 5,000 - 15,000" },
-    { value: "INR 15,000+", label: "INR 15,000+" },
-  ],
-  "United States": [
-    { value: "Under USD 50", label: "Under USD 50" },
-    { value: "USD 50 - 150", label: "USD 50 - 150" },
-    { value: "USD 150 - 400", label: "USD 150 - 400" },
-    { value: "USD 400+", label: "USD 400+" },
-  ],
-  "United Kingdom": [
-    { value: "Under GBP 40", label: "Under GBP 40" },
-    { value: "GBP 40 - 120", label: "GBP 40 - 120" },
-    { value: "GBP 120 - 300", label: "GBP 120 - 300" },
-    { value: "GBP 300+", label: "GBP 300+" },
-  ],
+const BUDGET_PRESETS_BY_CURRENCY = {
+  AED: [200, 500, 1500],
+  SAR: [200, 500, 1500],
+  QAR: [200, 500, 1500],
+  OMR: [200, 500, 1500],
+  KWD: [200, 500, 1500],
+  BHD: [200, 500, 1500],
+  USD: [50, 150, 400],
+  CAD: [70, 200, 500],
+  AUD: [70, 200, 500],
+  SGD: [70, 200, 500],
+  NZD: [70, 200, 500],
+  GBP: [40, 120, 300],
+  EUR: [40, 120, 300],
+  CHF: [40, 120, 300],
+  INR: [2000, 5000, 15000],
+  PKR: [5000, 15000, 40000],
+  BDT: [3000, 8000, 20000],
+  LKR: [10000, 25000, 60000],
+  NPR: [4000, 10000, 25000],
+  JPY: [5000, 15000, 40000],
+  KRW: [50000, 150000, 400000],
+  CNY: [300, 800, 2000],
+  TWD: [1500, 4000, 10000],
+  HKD: [400, 1200, 3200],
+  MYR: [150, 400, 1200],
+  THB: [1500, 4000, 10000],
+  IDR: [500000, 1500000, 4000000],
 };
 
-function getCountryFromCity(city = "") {
+function getCountryCodeFromCity(city = "") {
   const normalized = String(city).trim().toLowerCase();
-  if (!normalized) return "UAE";
+  if (!normalized) return "";
 
   const match = CITY_COUNTRY_RULES.find((rule) =>
     rule.match.some((term) => normalized.includes(term))
   );
 
-  return match?.country || "UAE";
+  return match?.countryCode || "";
 }
 
-function getBudgetOptionsByCity(city = "") {
-  const country = getCountryFromCity(city);
+function formatBudgetAmount(amount) {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(amount);
+}
+
+function buildBudgetOptions(countryCode = "") {
+  const currency = COUNTRY_CURRENCIES[countryCode] || COUNTRY_CURRENCIES.AE;
+  const profile = BUDGET_PRESETS_BY_CURRENCY[currency.code] || BUDGET_PRESETS_BY_CURRENCY.USD;
+  const [low, mid, high] = profile;
+
+  return [
+    { value: `Under ${currency.code} ${formatBudgetAmount(low)}`, label: `Under ${currency.code} ${formatBudgetAmount(low)}` },
+    { value: `${currency.code} ${formatBudgetAmount(low)} - ${formatBudgetAmount(mid)}`, label: `${currency.code} ${formatBudgetAmount(low)} - ${formatBudgetAmount(mid)}` },
+    { value: `${currency.code} ${formatBudgetAmount(mid)} - ${formatBudgetAmount(high)}`, label: `${currency.code} ${formatBudgetAmount(mid)} - ${formatBudgetAmount(high)}` },
+    { value: `${currency.code} ${formatBudgetAmount(high)}+`, label: `${currency.code} ${formatBudgetAmount(high)}+` },
+  ];
+}
+
+function getBudgetOptionsByLocation(city = "", countryCode = "") {
+  const resolvedCountryCode = countryCode || getCountryCodeFromCity(city) || "AE";
   return {
-    country,
-    options: BUDGET_OPTIONS_BY_COUNTRY[country] || BUDGET_OPTIONS_BY_COUNTRY.UAE,
+    countryCode: resolvedCountryCode,
+    country: COUNTRY_NAMES[resolvedCountryCode] || COUNTRY_NAMES.AE,
+    currency: COUNTRY_CURRENCIES[resolvedCountryCode] || COUNTRY_CURRENCIES.AE,
+    options: buildBudgetOptions(resolvedCountryCode),
   };
 }
 
@@ -534,6 +561,14 @@ function MultiStep({ step, value = [], setValue }) {
       setValue(value.filter((item) => item !== option.value));
       return;
     }
+    if (step.id === "skin_concerns") {
+      if (option.value === "None") {
+        setValue(["None"]);
+        return;
+      }
+      setValue([...value.filter((item) => item !== "None"), option.value]);
+      return;
+    }
     if (step.id === "routine_products") {
       if (option.value === "None") {
         setValue(["None"]);
@@ -562,34 +597,80 @@ function MultiStep({ step, value = [], setValue }) {
   );
 }
 
-function LocationStep({ step, value, setValue }) {
+function LocationStep({ step, value, setValue, onLocationMetaChange, countryCode }) {
   const [query, setQuery] = useState(value || "");
   const [locating, setLocating] = useState(false);
-  const filtered = useMemo(
-    () => step.suggestions.filter((city) => city.toLowerCase().includes(query.toLowerCase())),
-    [query, step.suggestions]
+  const [locationError, setLocationError] = useState("");
+  const [selectedCountryCode, setSelectedCountryCode] = useState("");
+  const [usedCurrentLocation, setUsedCurrentLocation] = useState(false);
+  const countryOptions = useMemo(
+    () => Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1])),
+    []
   );
+
+  useEffect(() => {
+    setQuery(value || "");
+  }, [value]);
+
+  useEffect(() => {
+    setSelectedCountryCode(countryCode || "");
+  }, [countryCode]);
+
+  const handleCountrySelect = (countryCode) => {
+    setSelectedCountryCode(countryCode);
+    setUsedCurrentLocation(false);
+    onLocationMetaChange?.({
+      countryCode,
+      countryName: COUNTRY_NAMES[countryCode] || "",
+    });
+    setLocationError("");
+  };
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
-      const fallback = "Current location";
-      setQuery(fallback);
-      setValue(fallback);
+      setLocationError("Current location is not available on this device. Please search manually.");
       return;
     }
 
     setLocating(true);
+    setLocationError("");
     navigator.geolocation.getCurrentPosition(
-      () => {
-        const fallback = "Current location";
-        setQuery(fallback);
-        setValue(fallback);
+      async ({ coords }) => {
+        try {
+          const resp = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.latitude}&lon=${coords.longitude}&zoom=10&addressdetails=1`
+          );
+          const json = await resp.json();
+          const countryCode = String(json.address?.country_code || "").toUpperCase();
+          const countryName = COUNTRY_NAMES[countryCode];
+          const cityName =
+            json.address?.city ||
+            json.address?.town ||
+            json.address?.village ||
+            json.address?.state_district ||
+            json.address?.state ||
+            countryName;
+
+          if (!countryCode || !countryName || !cityName) {
+            throw new Error("unverified-location");
+          }
+
+          const genuineLocation = cityName === countryName ? cityName : `${cityName}, ${countryName}`;
+          setQuery(genuineLocation);
+          setValue(genuineLocation);
+          setSelectedCountryCode(countryCode);
+          setUsedCurrentLocation(true);
+          onLocationMetaChange?.({ countryCode, countryName });
+          setLocationError("");
+        } catch {
+          setLocationError("We couldn't verify your current country. Please search manually.");
+          onLocationMetaChange?.({ countryCode: "", countryName: "" });
+        }
         setLocating(false);
       },
       () => {
-        const fallback = "Current location";
-        setQuery(fallback);
-        setValue(fallback);
+        setLocationError("Location permission was denied or unavailable. Please search manually.");
+        onLocationMetaChange?.({ countryCode: "", countryName: "" });
         setLocating(false);
       }
     );
@@ -597,6 +678,33 @@ function LocationStep({ step, value, setValue }) {
 
   return (
     <div>
+      <div style={{ marginBottom: 14 }}>
+        <select
+          value={selectedCountryCode}
+          onChange={(e) => handleCountrySelect(e.target.value)}
+          style={{
+            ...fieldStyle,
+            minHeight: 54,
+            borderRadius: 30,
+            appearance: "none",
+            WebkitAppearance: "none",
+            backgroundImage: "linear-gradient(45deg, transparent 50%, #7C8091 50%), linear-gradient(135deg, #7C8091 50%, transparent 50%)",
+            backgroundPosition: "calc(100% - 20px) calc(50% - 3px), calc(100% - 14px) calc(50% - 3px)",
+            backgroundSize: "6px 6px, 6px 6px",
+            backgroundRepeat: "no-repeat",
+            paddingRight: 40,
+            color: selectedCountryCode ? "#111111" : "#8C8FA1",
+          }}
+        >
+          <option value="">Select your country</option>
+          {countryOptions.map(([code, name]) => (
+            <option key={code} value={code}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div style={{ position: "relative" }}>
         <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "#A3A8B7", display: "flex", alignItems: "center" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -609,8 +717,15 @@ function LocationStep({ step, value, setValue }) {
           placeholder="Search your city"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            setValue(e.target.value);
+            const nextValue = e.target.value;
+            setQuery(nextValue);
+            setValue(nextValue);
+            if (usedCurrentLocation) {
+              setSelectedCountryCode("");
+              setUsedCurrentLocation(false);
+              onLocationMetaChange?.({ countryCode: "", countryName: "" });
+            }
+            setLocationError("");
           }}
           style={{ ...fieldStyle, minHeight: 54, paddingLeft: 40, borderRadius: 999 }}
         />
@@ -653,6 +768,12 @@ function LocationStep({ step, value, setValue }) {
         <span style={{ fontSize: 18, color: "#17181F", lineHeight: 1 }}>›</span>
       </button>
 
+      {locationError ? (
+        <div style={{ marginTop: 10, fontSize: 12, lineHeight: 1.5, color: "#B84D63" }}>
+          {locationError}
+        </div>
+      ) : null}
+
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 22, color: "#8C8FA1" }}>
         <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#F1F1F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <svg width="80" height="77" viewBox="0 0 80 77" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -661,29 +782,6 @@ function LocationStep({ step, value, setValue }) {
 </svg>
         </span>
         <div style={{ fontSize: 13, lineHeight: 1.45 }}>Your location is used only to personalize your experience and is never shared.</div>
-      </div>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 18 }}>
-        {filtered.slice(0, 8).map((city) => (
-          <button
-            key={city}
-            onClick={() => {
-              setQuery(city);
-              setValue(city);
-            }}
-            style={{
-              border: `1px solid ${value === city ? "#7386FF" : "#E7E7EC"}`,
-              background: value === city ? "#F5F7FF" : "#FFFFFF",
-              color: "#17181F",
-              borderRadius: 999,
-              padding: "10px 14px",
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            {city}
-          </button>
-        ))}
       </div>
     </div>
   );
@@ -770,6 +868,96 @@ function PersonalizationStep({ value = {}, setValue }) {
   );
 }
 
+function FemaleSafetyStep({ value = {}, setValue }) {
+  const toggleFlag = (key) => {
+    setValue({ ...value, [key]: !value[key] });
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <OptionButton
+          label="I'm Pregnant"
+          icon={
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="17" cy="17" r="17" fill="#F7F8FF"/>
+                <path d="M18.8877 9.5625C18.8877 10.6052 18.0424 11.4504 16.9997 11.4504C15.957 11.4504 15.1118 10.6052 15.1118 9.5625C15.1118 8.51979 15.957 7.67456 16.9997 7.67456C18.0424 7.67456 18.8877 8.51979 18.8877 9.5625Z" stroke="#9AB2FF" strokeWidth="1.2"/>
+                <path d="M16.9988 11.957C15.0909 11.957 13.5439 13.504 13.5439 15.4119V19.1664C13.5439 20.1488 14.3404 20.9454 15.3229 20.9454H17.9495C20.2698 20.9454 22.1508 22.8264 22.1508 25.1467V25.8757" stroke="#9AB2FF" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M13.5439 16.4014H20.4726" stroke="#9AB2FF" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M15.1113 20.9453V25.8757" stroke="#9AB2FF" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M18.8877 20.9453V25.8757" stroke="#9AB2FF" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </span>
+          }
+          selected={!!value.pregnant}
+          borderRadius={30}
+          onClick={() => toggleFlag("pregnant")}
+          circle
+        />
+
+        <OptionButton
+          label="I'm Breastfeeding"
+          icon={
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="17" cy="17" r="17" fill="#F7F8FF"/>
+                <path d="M18.8877 9.5625C18.8877 10.6052 18.0424 11.4504 16.9997 11.4504C15.957 11.4504 15.1118 10.6052 15.1118 9.5625C15.1118 8.51979 15.957 7.67456 16.9997 7.67456C18.0424 7.67456 18.8877 8.51979 18.8877 9.5625Z" stroke="#9AB2FF" strokeWidth="1.2"/>
+                <path d="M15.4336 12.4062C13.9256 12.4062 12.7031 13.6288 12.7031 15.1367V20.3996C12.7031 21.8036 13.8414 22.9419 15.2454 22.9419H18.5216C20.7608 22.9419 22.5759 24.757 22.5759 26.9962V27.1562" stroke="#9AB2FF" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M15.4336 16.0117C17.6758 16.0117 19.4935 17.8294 19.4935 20.0716V22.9417" stroke="#9AB2FF" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M15.4336 22.9414V27.1561" stroke="#9AB2FF" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </span>
+          }
+          selected={!!value.breastfeeding}
+          borderRadius={30}
+          onClick={() => toggleFlag("breastfeeding")}
+          circle
+        />
+      </div>
+
+      <div style={{ marginTop: 18, borderRadius: 22, border: "1px solid #E7E7EC", background: "#FFFFFF", boxShadow: "0 2px 3px rgba(0, 0, 0, 0.15)", padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+          <div style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid #E5E8F2", display: "flex", alignItems: "center", justifyContent: "center", color: "#6E7CFF", flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 4v16M4 12h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              <path d="M7.5 7.5h9v9h-9z" stroke="currentColor" strokeWidth="1.4" opacity="0.55"/>
+            </svg>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, lineHeight: 1.35, fontWeight: 400, color: "#17181F" }}>Other</div>
+          </div>
+        </div>
+
+        <textarea
+          className="personalization-textarea"
+          value={value.notes || ""}
+          onChange={(e) => setValue({ ...value, notes: e.target.value.slice(0, 300) })}
+          placeholder=""
+          style={{
+            width: "100%",
+            minHeight: 40,
+            resize: "none",
+            border: "none",
+            outline: "none",
+            padding: 0,
+            fontSize: 14,
+            color: "#5C6280",
+            background: "transparent",
+          }}
+        />
+        <div style={{ height: 1, background: "#ECEEF4", marginTop: 8 }} />
+        <div style={{ marginTop: 8, textAlign: "right", fontSize: 11, color: "#99A0B6" }}>{(value.notes || "").length}/300</div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 18, color: "#8C8FA1" }}>
+        <span style={{ fontSize: 14, lineHeight: 1 }}>ⓘ</span>
+        <div style={{ fontSize: 12, lineHeight: 1.5 }}>This information is optional and you can skip it if you prefer.</div>
+      </div>
+    </div>
+  );
+}
+
 function BodyStep({ value = {}, setValue, step }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -813,17 +1001,52 @@ function BodyStep({ value = {}, setValue, step }) {
   );
 }
 
-function FaceAreaStep({ step, value, setValue, gender }) {
+function FaceAreaStep({ step, value = [], setValue, gender }) {
   const positions = {
     Hair: { right: -6, top: 70 },
     Eyebrows: { right: -6, top: 114 },
     Eyes: { right: -6, top: 158 },
+    Lips: { right: -6, top: 246 },
     Cheeks: { left: -6, top: 158 },
     Teeth: { left: -6, top: 202 },
     Chin: { left: -6, top: 246 },
     "Whole Face": { left: "50%", bottom: -34, transform: "translateX(-50%)", width: 144 },
   };
+  const connectorMap = gender === "Female"
+    ? {
+        Hair: { start: [186, 90], c1: [226, 70], c2: [262, 74], end: [292, 88], side: "right" },
+        Eyebrows: { start: [150, 155], c1: [236, 118], c2: [262, 122], end: [292, 132], side: "right" },
+        Eyes: { start: [214, 170], c1: [240, 162], c2: [268, 164], end: [292, 176], side: "right" },
+        Lips: { start: [181, 230], c1: [196, 248], c2: [238, 274], end: [292, 278], side: "right" },
+        Cheeks: { start: [150, 200], c1: [122, 168], c2: [96, 166], end: [68, 176], side: "left" },
+        Teeth: { start: [180, 220], c1: [142, 232], c2: [110, 224], end: [68, 220], side: "left" },
+        Chin: { start: [180, 250], c1: [148, 286], c2: [112, 280], end: [68, 264], side: "left" },
+      }
+    : {
+        Hair: { start: [186, 80], c1: [226, 70], c2: [262, 74], end: [292, 88], side: "right" },
+        Eyebrows: { start: [150, 140], c1: [236, 118], c2: [262, 122], end: [292, 132], side: "right" },
+        Eyes: { start: [210, 152], c1: [240, 160], c2: [268, 164], end: [292, 176], side: "right" },
+        Lips: { start: [200, 230], c1: [196, 248], c2: [238, 274], end: [292, 278], side: "right" },
+        Cheeks: { start: [150, 180], c1: [122, 168], c2: [96, 166], end: [68, 176], side: "left" },
+        Teeth: { start: [180, 210], c1: [142, 232], c2: [110, 224], end: [68, 220], side: "left" },
+        Chin: { start: [180, 240], c1: [148, 286], c2: [112, 280], end: [68, 264], side: "left" },
+      };
   const guideSrc = gender === "Female" ? femaleFaceAreaGuide : faceAreaGuide;
+  const displayOptions = gender === "Female"
+    ? step.options
+    : step.options.filter((option) => option.value !== "Lips");
+  const selectedValues = Array.isArray(value) ? value : [];
+
+  const toggleArea = (nextValue) => {
+    const exists = selectedValues.includes(nextValue);
+
+    if (exists) {
+      setValue(selectedValues.filter((item) => item !== nextValue));
+      return;
+    }
+
+    setValue([...selectedValues, nextValue]);
+  };
 
   return (
     <div style={{ paddingTop: 6 }}>
@@ -855,10 +1078,11 @@ function FaceAreaStep({ step, value, setValue, gender }) {
               display: "block",
             }}
           />
-          <FaceOverlay selected={value} />
         </div>
 
-        {step.options.map((option) => {
+        <FaceConnectors options={displayOptions} selected={value} connectorMap={connectorMap} />
+
+        {displayOptions.map((option) => {
           const position = positions[option.value];
           if (!position) return null;
 
@@ -877,14 +1101,63 @@ function FaceAreaStep({ step, value, setValue, gender }) {
             >
               <AreaChoice
                 label={option.label}
-                selected={value === option.value}
-                onClick={() => setValue(option.value)}
+                selected={selectedValues.includes(option.value)}
+                onClick={() => toggleArea(option.value)}
               />
             </div>
           );
         })}
       </div>
     </div>
+  );
+}
+
+function FaceConnectors({ options, selected, connectorMap }) {
+  const selectedValues = Array.isArray(selected) ? selected : [];
+  const wholeFaceSelected = selectedValues.includes("Whole Face");
+
+  return (
+    <svg
+      viewBox="0 0 360 432"
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        overflow: "visible",
+      }}
+      aria-hidden="true"
+    >
+      {options
+        .filter((option) => connectorMap[option.value])
+        .map((option) => {
+          const connector = connectorMap[option.value];
+          const isActive = wholeFaceSelected || selectedValues.includes(option.value);
+          const stroke = isActive ? "#2333B3" : "rgba(35, 51, 179, 0.28)";
+          const endOffset = connector.side === "right" ? 10 : -10;
+
+          return (
+            <g key={option.value}>
+              <path
+                d={`M${connector.start[0]} ${connector.start[1]} C${connector.c1[0]} ${connector.c1[1]}, ${connector.c2[0]} ${connector.c2[1]}, ${connector.end[0]} ${connector.end[1]}`}
+                fill="none"
+                stroke={stroke}
+                strokeWidth={isActive ? 2.8 : 2.2}
+                strokeLinecap="round"
+              />
+              <path
+                d={`M${connector.end[0]} ${connector.end[1]} L${connector.end[0] + endOffset} ${connector.end[1]}`}
+                fill="none"
+                stroke={stroke}
+                strokeWidth={isActive ? 2.8 : 2.2}
+                strokeLinecap="round"
+              />
+              <circle cx={connector.start[0]} cy={connector.start[1]} r={isActive ? 5.5 : 4.5} fill={stroke} />
+            </g>
+          );
+        })}
+    </svg>
   );
 }
 
@@ -918,89 +1191,6 @@ function AreaChoice({ label, selected, onClick }) {
         flexShrink: 0,
       }} />
     </button>
-  );
-}
-
-function FaceOverlay({ selected }) {
-  const activeStroke = "#E7D94B";
-  const inactiveStroke = "transparent";
-  const activeFill = "rgba(255, 240, 120, 0.42)";
-  const inactiveFill = "transparent";
-
-  return (
-    <svg
-      viewBox="0 0 944 1227"
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
-      }}
-    >
-      <path
-        d="M328 245 C358 176, 412 145, 470 142 C528 145, 582 176, 612 243 C638 307, 646 390, 640 480 C634 568, 621 656, 586 744 C560 806, 520 856, 470 868 C420 856, 380 806, 354 744 C319 656, 306 568, 300 480 C294 392, 302 309, 328 245 Z"
-        fill={selected === "Whole Face" ? activeFill : inactiveFill}
-        stroke={selected === "Whole Face" ? activeStroke : inactiveStroke}
-        strokeWidth="14"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M208 154 C266 72, 370 28, 474 30 C580 28, 685 74, 744 158 C732 200, 698 248, 638 274 C576 238, 524 220, 474 220 C425 220, 373 238, 310 274 C251 248, 217 200, 208 154 Z"
-        fill={selected === "Hair" ? activeFill : inactiveFill}
-        stroke={selected === "Hair" ? activeStroke : inactiveStroke}
-        strokeWidth="12"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M272 432 C324 400, 379 390, 432 398 C404 434, 342 444, 272 432 Z"
-        fill={selected === "Eyebrows" ? activeFill : inactiveFill}
-        stroke={selected === "Eyebrows" ? activeStroke : inactiveStroke}
-        strokeWidth="10"
-      />
-      <path
-        d="M512 398 C565 390, 620 400, 672 432 C602 444, 540 434, 512 398 Z"
-        fill={selected === "Eyebrows" ? activeFill : inactiveFill}
-        stroke={selected === "Eyebrows" ? activeStroke : inactiveStroke}
-        strokeWidth="10"
-      />
-      <path
-        d="M250 562 C298 526, 356 524, 408 552 C384 622, 334 664, 266 674 C232 646, 224 592, 250 562 Z"
-        fill={selected === "Cheeks" ? activeFill : inactiveFill}
-        stroke={selected === "Cheeks" ? activeStroke : inactiveStroke}
-        strokeWidth="12"
-      />
-      <path
-        d="M532 552 C584 524, 642 526, 690 562 C716 592, 708 646, 674 674 C606 664, 556 622, 532 552 Z"
-        fill={selected === "Cheeks" ? activeFill : inactiveFill}
-        stroke={selected === "Cheeks" ? activeStroke : inactiveStroke}
-        strokeWidth="12"
-      />
-      <path
-        d="M274 499 C320 477, 374 477, 424 495 C398 535, 338 547, 274 499 Z"
-        fill={selected === "Eyes" ? activeFill : inactiveFill}
-        stroke={selected === "Eyes" ? activeStroke : inactiveStroke}
-        strokeWidth="10"
-      />
-      <path
-        d="M516 495 C566 477, 620 477, 666 499 C602 547, 542 535, 516 495 Z"
-        fill={selected === "Eyes" ? activeFill : inactiveFill}
-        stroke={selected === "Eyes" ? activeStroke : inactiveStroke}
-        strokeWidth="10"
-      />
-      <path
-        d="M360 812 C404 780, 536 780, 580 812 C568 888, 526 942, 470 954 C414 942, 372 888, 360 812 Z"
-        fill={selected === "Chin" ? activeFill : inactiveFill}
-        stroke={selected === "Chin" ? activeStroke : inactiveStroke}
-        strokeWidth="12"
-      />
-      <path
-        d="M369 706 C409 682, 535 682, 577 706 C563 758, 521 786, 473 790 C425 786, 383 758, 369 706 Z"
-        fill={selected === "Teeth" ? activeFill : inactiveFill}
-        stroke={selected === "Teeth" ? activeStroke : inactiveStroke}
-        strokeWidth="10"
-      />
-    </svg>
   );
 }
 
@@ -1137,10 +1327,10 @@ function DateOfBirthStep({ value, setValue }) {
       <input
         type="text"
         inputMode="numeric"
-        placeholder="DD-MM-YYYY"
+        placeholder="02-08-2000"
         value={value || ""}
         onChange={(e) => setValue(formatDob(e.target.value))}
-        style={fieldStyle}
+        style={{ ...fieldStyle, minHeight: 54, borderRadius: 999 }}
       />
     </div>
   );
@@ -1159,11 +1349,13 @@ function normalizeAnswers(state) {
 
   return {
     identity: {
-      age: "25",
+      age: state.identity_dob || "",
       gender,
       ethnicity,
     },
     climate: state.climate || "",
+    locationCountryCode: state.location_country_code || "",
+    locationCountryName: state.location_country_name || "",
     routine: {
       routine,
       products,
@@ -1171,8 +1363,9 @@ function normalizeAnswers(state) {
       oilDry: state.routine_skin_type || "",
       sensitiveResistant: state.routine_sensitive || "",
       concerns: state.skin_concerns || [],
-      focusArea: state.focus_area || "",
+      focusArea: state.focus_area || [],
       personalization: state.personalization || {},
+      femaleSafety: state.female_safety || {},
     },
     body: state.body || {},
     style: state.style || [],
@@ -1182,15 +1375,18 @@ function normalizeAnswers(state) {
   };
 }
 
-function isValid(step, value) {
+function isValid(step, value, answers = {}) {
   if (step.type === "multi") {
+    return Array.isArray(value) && value.length >= (step.min || 1);
+  }
+  if (step.type === "faceAreas") {
     return Array.isArray(value) && value.length >= (step.min || 1);
   }
   if (step.type === "singleChoice") {
     return !!value;
   }
   if (step.type === "location") {
-    return !!String(value || "").trim();
+    return !!String(value || "").trim() && !!String(answers.location_country_code || "").trim();
   }
   if (step.type === "body") {
     return !!(value?.type && value?.height && value?.weight);
@@ -1429,40 +1625,59 @@ function renderMiniIcon(type, width = 24, height = 24) {
   return <span style={{ fontSize: 18, color: stroke }}>•</span>;
 }
 
-function StepRenderer({ step, value, setValue, onAfterSelect, answers }) {
+function StepRenderer({ step, value, setValue, onAfterSelect, answers, onLocationMetaChange }) {
   if (step.type === "single") return <SingleStep step={step} value={value} setValue={setValue} onAfterSelect={onAfterSelect} />;
   if (step.type === "singleChoice") return <SingleChoiceStep step={step} value={value} setValue={setValue} />;
   if (step.type === "singleDetailed") return <SingleDetailedStep step={step} value={value} setValue={setValue} onAfterSelect={onAfterSelect} />;
   if (step.type === "multi") return <MultiStep step={step} value={value} setValue={setValue} />;
-  if (step.type === "location") return <LocationStep step={step} value={value} setValue={setValue} />;
+  if (step.type === "location") return <LocationStep step={step} value={value} setValue={setValue} onLocationMetaChange={onLocationMetaChange} countryCode={answers.location_country_code} />;
   if (step.type === "faceAreas") return <FaceAreaStep step={step} value={value} setValue={setValue} gender={answers.identity_gender} />;
   if (step.type === "body") return <BodyStep step={step} value={value} setValue={setValue} />;
   if (step.type === "sleep") return <SleepStep value={value} setValue={setValue} />;
   if (step.type === "personalize") return <PersonalizationStep value={value} setValue={setValue} />;
+  if (step.type === "femaleSafety") return <FemaleSafetyStep value={value} setValue={setValue} />;
   if (step.type === "dob") return <DateOfBirthStep value={value} setValue={setValue} />;
   return null;
+}
+
+function getVisibleSteps(answers) {
+  const isFemale = answers.identity_gender === "Female";
+
+  return STEPS.filter((step) => {
+    if (step.id === "female_safety") return isFemale;
+    return true;
+  });
 }
 
 export default function Onboarding({ onComplete, onBack }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [dir, setDir] = useState(1);
+  const activeSteps = useMemo(() => getVisibleSteps(answers), [answers]);
 
-  const budgetConfig = getBudgetOptionsByCity(answers.climate || "");
+  const budgetConfig = getBudgetOptionsByLocation(answers.climate || "", answers.location_country_code || "");
   const step =
-    STEPS[stepIndex]?.id === "budget"
+    activeSteps[stepIndex]?.id === "budget"
       ? {
-          ...STEPS[stepIndex],
+          ...activeSteps[stepIndex],
           options: budgetConfig.options,
           sub: `So you get products you'd actually buy in ${budgetConfig.country}.`,
         }
-      : STEPS[stepIndex];
+      : activeSteps[stepIndex];
   const value = answers[step.id];
-  const valid = isValid(step, value);
+  const valid = isValid(step, value, answers);
   const hideContinue = !!step.autoAdvance;
 
   const setValue = (nextValue) => {
     setAnswers((current) => ({ ...current, [step.id]: nextValue }));
+  };
+
+  const handleLocationMetaChange = ({ countryCode = "", countryName = "" }) => {
+    setAnswers((current) => ({
+      ...current,
+      location_country_code: countryCode,
+      location_country_name: countryName,
+    }));
   };
 
   useEffect(() => {
@@ -1489,7 +1704,7 @@ export default function Onboarding({ onComplete, onBack }) {
 
   const handleContinue = () => {
     if (!valid) return;
-    if (stepIndex === STEPS.length - 1) {
+    if (stepIndex === activeSteps.length - 1) {
       onComplete(normalizeAnswers(answers));
       return;
     }
@@ -1498,7 +1713,7 @@ export default function Onboarding({ onComplete, onBack }) {
   };
 
   const handleSkip = () => {
-    if (stepIndex === STEPS.length - 1) {
+    if (stepIndex === activeSteps.length - 1) {
       onComplete(normalizeAnswers(answers));
       return;
     }
@@ -1507,12 +1722,12 @@ export default function Onboarding({ onComplete, onBack }) {
   };
 
   const handleAutoAdvance = (nextValue) => {
-    if (!step.autoAdvance || !isValid(step, nextValue)) return;
+    if (!step.autoAdvance || !isValid(step, nextValue, answers)) return;
     window.setTimeout(() => {
       setDir(1);
       setStepIndex((current) => {
         if (current !== stepIndex) return current;
-        return Math.min(current + 1, STEPS.length - 1);
+        return Math.min(current + 1, activeSteps.length - 1);
       });
     }, 120);
   };
@@ -1542,7 +1757,7 @@ export default function Onboarding({ onComplete, onBack }) {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <BackButton onClick={handleBack} />
             <div style={{ flex: 1 }}>
-              <ProgressBar step={stepIndex} total={STEPS.length} />
+              <ProgressBar step={stepIndex} total={activeSteps.length} />
             </div>
           </div>
         </div>
@@ -1574,7 +1789,14 @@ export default function Onboarding({ onComplete, onBack }) {
               <div style={{ height: 18 }} />
             )}
 
-            <StepRenderer step={step} value={value} setValue={setValue} onAfterSelect={handleAutoAdvance} answers={answers} />
+            <StepRenderer
+              step={step}
+              value={value}
+              setValue={setValue}
+              onAfterSelect={handleAutoAdvance}
+              answers={answers}
+              onLocationMetaChange={handleLocationMetaChange}
+            />
           </div>
         </div>
 
@@ -1604,9 +1826,9 @@ export default function Onboarding({ onComplete, onBack }) {
                 boxShadow: valid ? "0 16px 28px rgba(32, 42, 149, 0.22)" : "none",
               }}
             >
-              {stepIndex === STEPS.length - 1 ? "Continue to photo capture" : "Continue"}
+              {stepIndex === activeSteps.length - 1 ? "Continue to photo capture" : "Continue"}
             </button>
-            {step.type === "personalize" ? (
+            {step.optional ? (
               <button
                 onClick={handleSkip}
                 style={{

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { GLOBAL_CSS, LIGHT_SURFACE_BORDER, LIGHT_SURFACE_SHADOW, OzenLogo } from "../brand.jsx";
+import landingLogo from "../../../image/Logo blue transparent.png";
 
 const SECTIONS = [
   {
@@ -77,8 +78,7 @@ export default function Disclaimer({ onAccept, onBack }) {
             ←
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 800, letterSpacing: 0.2 }}>
-            <OzenLogo size={22} />
-            <span><span style={{ color: "#2A2F8F" }}>O</span>zen</span>
+            <img src={landingLogo} alt="OZEN" style={{ width: 90, height: 50 }} />
           </div>
           <div style={{ width: 36 }} />
         </div>

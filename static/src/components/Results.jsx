@@ -2,6 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { GLOBAL_CSS, scoreColor10 } from "../brand.jsx";
 import OzenResult from "../../../image/Logo blue transparent 8.svg";
+// import CleanserImage from "../../../image/cleaner.svg";
+import CleanserImage from "../../products/cleanser.jpeg";
+import MoisturizerImage from "../../products/moisturiser.jpeg";
+import SPFImage from "../../products/sunscream.jpeg";
+import TonerImage from "../../products/mud_mask.jpeg";
 
 const LABELS = {
   eyes: "Eyes",
@@ -14,6 +19,73 @@ const LABELS = {
 
 const CARD_ORDER = ["eyes", "eyebrows", "jawline", "hair", "skin_quality", "facial_hair"];
 
+const PLACEHOLDER_PRODUCTS = [
+  {
+    category: "Cleanser",
+    name: "CeraVe Hydrating Cleanser for Normal to Dry Skin",
+    score: 88,
+    price: "₹1,199",
+    oldPrice: "₹1,399",
+    reviews: "4.5 (1.2k reviews)",
+    badges: ["Hydrating", "Barrier Repair"],
+    analysis: [
+      { label: "Cleansing Strength", value: 0.72, tone: "strong" },
+      { label: "Hydrating Power", value: 0.58, tone: "medium" },
+    ],
+    warnings: ["Irritation", "Flaky skin", "Dehydration"],
+    goodFor: ["Dry Skin", "Sensitive Skin", "Normal Skin"],
+    img: CleanserImage,
+  },
+  {
+    category: "Moisturizer",
+    name: "CeraVe Moisturising Lotion for Daily Barrier Support",
+    score: 84,
+    price: "₹1,349",
+    oldPrice: "₹1,599",
+    reviews: "4.4 (980 reviews)",
+    badges: ["Ceramides", "Daily Use"],
+    analysis: [
+      { label: "Barrier Support", value: 0.81, tone: "strong" },
+      { label: "Glow Finish", value: 0.49, tone: "medium" },
+    ],
+    warnings: ["Heavy feel"],
+    goodFor: ["Dry Skin", "Normal Skin"],
+    img: MoisturizerImage,
+  },
+  {
+    category: "SPF",
+    name: "Lightweight Daily SPF 50 for City Exposure",
+    score: 82,
+    price: "₹999",
+    oldPrice: "₹1,249",
+    reviews: "4.3 (860 reviews)",
+    badges: ["No White Cast", "SPF 50"],
+    analysis: [
+      { label: "UV Protection", value: 0.86, tone: "strong" },
+      { label: "Texture Comfort", value: 0.54, tone: "medium" },
+    ],
+    warnings: ["Reapply often"],
+    goodFor: ["Oily Skin", "Combination Skin", "Normal Skin"],
+    img: SPFImage,
+  },
+  {
+    category: "Toner",
+    name: "Gentle Brightening Toner for Uneven Skin Texture",
+    score: 80,
+    price: "₹899",
+    oldPrice: "₹1,099",
+    reviews: "4.2 (610 reviews)",
+    badges: ["Brightening", "Low Irritation"],
+    analysis: [
+      { label: "Texture Smoothing", value: 0.69, tone: "strong" },
+      { label: "Sensitivity Safety", value: 0.47, tone: "medium" },
+    ],
+    warnings: ["Patch test"],
+    goodFor: ["Normal Skin", "Combination Skin"],
+    img: TonerImage,
+  },
+];
+
 function reportScoreColor(score) {
   const value = Number(score) || 0;
   if (value < 4.5) return "#EF4444";
@@ -21,10 +93,40 @@ function reportScoreColor(score) {
   return "#32B56A";
 }
 
+function useAnimatedNumber(target, duration = 1400) {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const numericTarget = Number(target) || 0;
+    let frameId = 0;
+    let startTime = null;
+
+    const tick = (timestamp) => {
+      if (startTime == null) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(numericTarget * eased);
+
+      if (progress < 1) {
+        frameId = window.requestAnimationFrame(tick);
+      }
+    };
+
+    setValue(0);
+    frameId = window.requestAnimationFrame(tick);
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [target, duration]);
+
+  return value;
+}
+
 function Ring({ score, size = 80, strokeWidth = 6, track = "#ECECF4", color }) {
+  const animatedScore = useAnimatedNumber(score);
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
-  const offset = c - (Math.max(0, Math.min(10, score)) / 10) * c;
+  const offset = c - (Math.max(0, Math.min(10, animatedScore)) / 10) * c;
   const ringColor = color || reportScoreColor(score);
 
   return (
@@ -43,6 +145,12 @@ function Ring({ score, size = 80, strokeWidth = 6, track = "#ECECF4", color }) {
       />
     </svg>
   );
+}
+
+function AnimatedScore({ value, decimals = 1, style }) {
+  const animatedValue = useAnimatedNumber(value);
+
+  return <span style={style}>{animatedValue.toFixed(decimals)}</span>;
 }
 
 function titleCase(value = "") {
@@ -125,7 +233,7 @@ function ProgressBar({ score, color }) {
           width: ready ? width : "0%",
           height: "100%",
           borderRadius: 999,
-          background: `linear-gradient(90deg, ${color} 0%, #8CA8FF 55%, ${color} 100%)`,
+          background: `linear-gradient(90deg, ${color} 0%, #f94c1c 55%, ${color} 100%)`,
           backgroundSize: "200% 100%",
           animation: "barShimmer 5.5s linear infinite",
           transition: "width 1.5s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -222,7 +330,7 @@ function ResultsPreviewCard({ result, cardRef, onExpand }) {
         <div style={{ position: "relative", width: 164, height: 164, marginBottom: 14 }}>
           <Ring score={overall} size={164} strokeWidth={8} color={overallColor} />
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 42, fontWeight: 500, color: overallColor, lineHeight: 1 }}>{overall.toFixed(1)}</span>
+            <AnimatedScore value={overall} style={{ fontSize: 42, fontWeight: 500, color: overallColor, lineHeight: 1 }} />
             <span style={{ marginTop: 10, fontSize: 11, letterSpacing: 2.4, color: "#8B8CA3" }}>OUT OF 10</span>
           </div>
         </div>
@@ -251,7 +359,7 @@ function ResultsPreviewCard({ result, cardRef, onExpand }) {
             <div style={{ position: "relative", width: 52, height: 52 }}>
               <Ring score={item.score} size={52} strokeWidth={4} />
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: reportScoreColor(item.score) }}>{item.score.toFixed(1)}</span>
+                <AnimatedScore value={item.score} style={{ fontSize: 14, fontWeight: 600, color: reportScoreColor(item.score) }} />
               </div>
             </div>
             <span style={{ fontSize: 11, color: "#6D708C", textAlign: "center" }}>{item.label}</span>
@@ -298,7 +406,7 @@ function ReportCard({ children, style }) {
   );
 }
 
-function AnimatedReportCard({ children, style, index = 0, top = 96, overlap = 72 }) {
+function AnimatedReportCard({ children, style, index = 0, top = 96, overlap = 72, sticky = true }) {
   const cardRef = useRef(null);
   const [visible, setVisible] = useState(index < 2);
 
@@ -325,8 +433,8 @@ function AnimatedReportCard({ children, style, index = 0, top = 96, overlap = 72
   return (
     <div
       style={{
-        position: "sticky",
-        top: top + index * 18,
+        position: sticky ? "sticky" : "relative",
+        top: sticky ? top + index * 18 : "auto",
         zIndex: 20 + index,
         marginTop: index === 0 ? 0 : -overlap,
         paddingTop: index === 0 ? 0 : overlap,
@@ -344,6 +452,455 @@ function AnimatedReportCard({ children, style, index = 0, top = 96, overlap = 72
       >
         <ReportCard style={style}>{children}</ReportCard>
       </div>
+    </div>
+  );
+}
+
+function ProductScorePill({ score }) {
+  return (
+    <div
+      style={{
+        minWidth: 86,
+        height: 38,
+        borderRadius: 999,
+        background: "#45B533",
+        color: "#FFFFFF",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 16,
+        fontWeight: 700,
+        letterSpacing: 0.2,
+      }}
+    >
+      {score}/100
+    </div>
+  );
+}
+
+function ProductInsightBar({ value, tone }) {
+  const filledBars = Math.max(1, Math.round(Math.max(0, Math.min(1, value)) * 4));
+  const color = tone === "strong" ? "#86A5FF" : "#FFD166";
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 4 }}>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div
+          key={index}
+          style={{
+            height: 4,
+            borderRadius: 999,
+            background: index < filledBars ? color : "#E9ECF6",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ProductsSection() {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [hasSelectedProduct, setHasSelectedProduct] = useState(false);
+  const [expandedImage, setExpandedImage] = useState(false);
+  const touchStartXRef = useRef(null);
+  const touchDeltaXRef = useRef(0);
+  const currentProduct = PLACEHOLDER_PRODUCTS[selectedIndex];
+  const totalProducts = PLACEHOLDER_PRODUCTS.length;
+
+  const getWrappedIndex = (index) => (index + totalProducts) % totalProducts;
+  const leftIndex = getWrappedIndex(selectedIndex - 1);
+  const rightIndex = getWrappedIndex(selectedIndex + 1);
+
+  const jumpTo = (nextIndex) => {
+    const normalized = getWrappedIndex(nextIndex);
+    setSelectedIndex(normalized);
+    setExpandedImage(false);
+  };
+
+  const handleTouchStart = (event) => {
+    touchStartXRef.current = event.touches[0]?.clientX ?? null;
+    touchDeltaXRef.current = 0;
+  };
+
+  const handleTouchMove = (event) => {
+    if (touchStartXRef.current == null) return;
+    const currentX = event.touches[0]?.clientX ?? touchStartXRef.current;
+    touchDeltaXRef.current = currentX - touchStartXRef.current;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartXRef.current == null) return;
+
+    const deltaX = touchDeltaXRef.current;
+    if (Math.abs(deltaX) > 36) {
+      if (deltaX < 0) jumpTo(selectedIndex + 1);
+      if (deltaX > 0) jumpTo(selectedIndex - 1);
+    }
+
+    touchStartXRef.current = null;
+    touchDeltaXRef.current = 0;
+  };
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        zIndex: 60,
+        background: "linear-gradient(180deg, rgba(244,245,255,0.95) 0%, #FFFFFF 100%)",
+        border: "1px solid #E7EAF6",
+        borderRadius: 28,
+        padding: "18px 14px 20px",
+        boxShadow: "0 28px 80px rgba(114, 100, 255, 0.10)",
+        marginBottom: 24,
+      }}
+    >
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <div style={{ fontSize: 10, letterSpacing: 3.5, color: "#9AA2BC", marginBottom: 10 }}>RECOMMENDED FOR YOU</div>
+        <div style={{ fontSize: 18, lineHeight: 1.15, color: "#17181F", fontWeight: 500 }}>Products that match your skin</div>
+      </div>
+
+      <div style={{ position: "relative", marginBottom: 14 }}>
+        <button
+          onClick={() => jumpTo(selectedIndex - 1)}
+          style={{
+            position: "absolute",
+            left: 2,
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: 30,
+            height: 30,
+            borderRadius: "50%",
+            border: "1px solid #E4E8F3",
+            background: "#FFFFFF",
+            color: "#8390C0",
+            fontSize: 22,
+            lineHeight: 1,
+            cursor: expandedImage ? "default" : "pointer",
+            zIndex: 2,
+            boxShadow: "0 8px 20px rgba(40, 52, 96, 0.10)",
+            opacity: expandedImage ? 0 : 1,
+            visibility: expandedImage ? "hidden" : "visible",
+            pointerEvents: expandedImage ? "none" : "auto",
+            transition: "opacity .2s ease, visibility .2s ease",
+          }}
+          aria-label="Previous product"
+        >
+          ‹
+        </button>
+
+        <button
+          onClick={() => jumpTo(selectedIndex + 1)}
+          style={{
+            position: "absolute",
+            right: 2,
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: 30,
+            height: 30,
+            borderRadius: "50%",
+            border: "1px solid #E4E8F3",
+            background: "#FFFFFF",
+            color: "#8390C0",
+            fontSize: 22,
+            lineHeight: 1,
+            cursor: expandedImage ? "default" : "pointer",
+            zIndex: 2,
+            boxShadow: "0 8px 20px rgba(40, 52, 96, 0.10)",
+            opacity: expandedImage ? 0 : 1,
+            visibility: expandedImage ? "hidden" : "visible",
+            pointerEvents: expandedImage ? "none" : "auto",
+            transition: "opacity .2s ease, visibility .2s ease",
+          }}
+          aria-label="Next product"
+        >
+          ›
+        </button>
+
+        <div
+          style={{
+            position: "relative",
+            height: 300,
+            padding: "8px 28px 10px",
+            overflow: "hidden",
+            touchAction: "pan-y",
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {expandedImage ? (
+            <div
+              style={{
+                position: "absolute",
+                inset: "8px 28px 10px",
+                background: "#FFFFFF",
+                border: "1px solid #E7EAF6",
+                borderRadius: 22,
+                padding: "12px 12px 16px",
+                zIndex: 5,
+                boxShadow: "0 18px 34px rgba(72, 84, 180, 0.16)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                <button
+                  onClick={() => {
+                    setExpandedImage(false);
+                    setHasSelectedProduct(true);
+                  }}
+                  aria-label="Close image preview"
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    border: "1px solid #E2E6F2",
+                    background: "#F8F9FE",
+                    color: "#5E6785",
+                    fontSize: 18,
+                    lineHeight: 1,
+                    cursor: "pointer",
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                style={{
+                  width: "100%",
+                  height: 224,
+                  borderRadius: 20,
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #F7F8FD 100%)",
+                  border: "1px solid #ECEFF8",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  padding: 18,
+                }}
+              >
+                <img
+                  src={currentProduct.img}
+                  alt={currentProduct.name}
+                  style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                />
+              </div>
+            </div>
+          ) : (
+            PLACEHOLDER_PRODUCTS.map((product, index) => {
+              const isActive = index === selectedIndex;
+              const isLeft = index === leftIndex;
+              const isRight = index === rightIndex;
+              const isVisible = isActive || isLeft || isRight;
+
+              if (!isVisible) return null;
+
+              let left = "50%";
+              let translateX = "-50%";
+              let scale = 1;
+              let opacity = 1;
+              let zIndex = 3;
+
+              if (isLeft) {
+                left = "18%";
+                translateX = "-50%";
+                scale = 0.88;
+                opacity = 0.5;
+                zIndex = 1;
+              }
+
+              if (isRight) {
+                left = "82%";
+                translateX = "-50%";
+                scale = 0.88;
+                opacity = 0.5;
+                zIndex = 1;
+              }
+
+              return (
+                <button
+                  key={product.name}
+                  onClick={() => {
+                    setSelectedIndex(index);
+                    setHasSelectedProduct(true);
+                    setExpandedImage(true);
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    left,
+                    width: "55%",
+                    flex: "0 0 55%",
+                    border: isActive ? "1.5px solid #C7D1FF" : "1px solid #E7EAF6",
+                    background: "#FFFFFF",
+                    borderRadius: 22,
+                    padding: "12px 10px 14px",
+                    cursor: "pointer",
+                    boxShadow: isActive ? "0 18px 34px rgba(72, 84, 180, 0.16)" : "0 10px 24px rgba(37, 46, 89, 0.08)",
+                    transform: `translateX(${translateX}) scale(${scale})`,
+                    opacity,
+                    transition: "left .28s ease, transform .28s ease, opacity .28s ease, box-shadow .28s ease",
+                    zIndex,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: 184,
+                      borderRadius: 18,
+                      background: "linear-gradient(180deg, #FFFFFF 0%, #F7F8FD 100%)",
+                      border: "1px solid #ECEFF8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <img src={product.img} alt={product.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+                  </div>
+                  <div style={{ fontSize: 14, color: "#2B3BA8", marginBottom: 4, textAlign: "left" }}>{product.category}</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.4, fontWeight: 600, color: "#17181F", textAlign: "left" }}>{product.name}</div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 6 }}>
+        {PLACEHOLDER_PRODUCTS.map((product, index) => (
+          <button
+              key={`${product.name}-dot`}
+              onClick={() => jumpTo(index)}
+              aria-label={`Show product ${index + 1}`}
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                border: "none",
+                padding: 0,
+                background: index === selectedIndex ? "#8AA0FF" : "#D8DDEA",
+                cursor: "pointer",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {hasSelectedProduct ? (
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E7EAF6",
+            borderRadius: 22,
+            padding: "14px 12px 16px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+            <div>
+              <div style={{ fontSize: 14, color: "#2B3BA8", marginBottom: 4 }}>{currentProduct.category}</div>
+              <div style={{ fontSize: 15, lineHeight: 1.4, fontWeight: 700, color: "#17181F" }}>{currentProduct.name}</div>
+            </div>
+            <ProductScorePill score={currentProduct.score} />
+          </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+            {currentProduct.badges.map((badge) => (
+              <span
+                key={badge}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  background: "#EEF1FF",
+                  color: "#5C67C7",
+                  fontSize: 11,
+                  fontWeight: 500,
+                }}
+              >
+                {badge}
+              </span>
+            ))}
+          </div>
+
+          {/*
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#1E2B9B" }}>{currentProduct.price}</div>
+            <div style={{ fontSize: 13, color: "#9AA2BC", textDecoration: "line-through" }}>{currentProduct.oldPrice}</div>
+          </div>
+          <div style={{ fontSize: 11, color: "#8C93A9", marginBottom: 14 }}>{currentProduct.reviews}</div>
+          */}
+
+          <div style={{ height: 1, background: "#ECEFF7", marginBottom: 14 }} />
+
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#17181F", marginBottom: 2 }}>Detailed analysis</div>
+          <div style={{ fontSize: 11, color: "#98A0B8", marginBottom: 12 }}>Based on AI ingredient review</div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 14 }}>
+            {currentProduct.analysis.map((item) => (
+              <div key={item.label}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, color: "#2A3556", fontWeight: 600 }}>{item.label}</span>
+                  <span style={{ fontSize: 12, color: item.tone === "strong" ? "#34A853" : "#F0A11E" }}>
+                    ({item.tone === "strong" ? "Strong" : "Medium"})
+                  </span>
+                </div>
+                <ProductInsightBar value={item.value} tone={item.tone} />
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#17181F", marginBottom: 8 }}>Be aware</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+            {currentProduct.warnings.map((warning) => (
+              <span
+                key={warning}
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: 999,
+                  background: "#FFF2F2",
+                  color: "#E05555",
+                  fontSize: 10,
+                }}
+              >
+                {warning}
+              </span>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#17181F", marginBottom: 8 }}>Good for</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+            {currentProduct.goodFor.map((item) => (
+              <span
+                key={item}
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: 999,
+                  background: "#EEF1FF",
+                  color: "#5C67C7",
+                  fontSize: 10,
+                }}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+
+          {/*
+          <button
+            style={{
+              width: "100%",
+              minHeight: 52,
+              border: "none",
+              borderRadius: 999,
+              background: "#1E2291",
+              color: "#FFFFFF",
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Add to my routine
+          </button>
+          */}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -392,7 +949,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
           <div style={{ position: "relative", width: 184, height: 184, margin: "0 auto 16px" }}>
             <Ring score={overall} size={184} strokeWidth={8} color={overallColor} />
             <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ fontSize: 52, fontWeight: 700, color: overallColor, lineHeight: 1 }}>{overall.toFixed(1)}</div>
+              <AnimatedScore value={overall} style={{ fontSize: 52, fontWeight: 700, color: overallColor, lineHeight: 1 }} />
               <div style={{ marginTop: 8, fontSize: 11, letterSpacing: 3, color: "#8C95AF" }}>OUT OF 10</div>
             </div>
           </div>
@@ -401,16 +958,16 @@ function FullResultsReport({ result, onReset, onDashboard }) {
           </div>
         </div>
 
-        <AnimatedReportCard index={0} style={{ background: "#FFF7E6", borderColor: "#F5D98F", boxShadow: "none" }}>
+        <AnimatedReportCard index={0} sticky={false} style={{ background: "#FFF7E6", borderColor: "#F5D98F", boxShadow: "none" }}>
           <div style={{ fontSize: 13, lineHeight: 1.6, color: "#7B5A16" }}>
             {result.disclaimer || "Results are indicative and subject to image quality, lighting and angle. This is not medical advice and should be used only as a directional grooming and skincare guide."}
           </div>
         </AnimatedReportCard>
 
-        <AnimatedReportCard index={1}>
+        <AnimatedReportCard index={1} sticky={false}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ fontSize: 17, fontWeight: 700, color: "#26324C" }}>Overall Score</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: overallColor }}>{overall.toFixed(1)}</div>
+            <AnimatedScore value={overall} style={{ fontSize: 18, fontWeight: 700, color: overallColor }} />
           </div>
           <ProgressBar score={overall} color={reportScoreColor(overall)} />
           <div style={{display: "flex",gap: "3px", marginTop: 14, fontSize: 13, lineHeight: 1.55, color: "#8B93AB" }}>
@@ -424,7 +981,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
           </div>
         </AnimatedReportCard>
 
-        <AnimatedReportCard index={2}>
+        <AnimatedReportCard index={2} sticky={false}>
 
           <div style={{display: "flex",alignItems: "center",gap: "3px", fontSize: 10, letterSpacing: 2.4, color: "#8B97B8", fontWeight: 700, marginBottom: 12 }}>
             <span><svg width="20" height="20" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -447,7 +1004,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
           </div>
         </AnimatedReportCard>
 
-        <AnimatedReportCard index={3} style={{ marginBottom: 26 }}>
+        <AnimatedReportCard index={3} sticky={false} style={{ marginBottom: 26 }}>
           <div style={{ fontSize: 10, letterSpacing: 2.4, color: "#8B97B8", fontWeight: 700, marginBottom: 14 }}>CATEGORY BREAKDOWN</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {scoreEntries.map((item) => (
@@ -455,7 +1012,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
                     <span style={{ fontSize: 15, fontWeight: 600, color: "#24304B" }}>{item.label}</span>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: reportScoreColor(item.score) }}>{item.score.toFixed(1)}</span>
+                    <AnimatedScore value={item.score} style={{ fontSize: 15, fontWeight: 700, color: reportScoreColor(item.score) }} />
                   </div>
                   <ProgressBar score={item.score} color={reportScoreColor(item.score)} />
                 </div>
@@ -472,7 +1029,7 @@ function FullResultsReport({ result, onReset, onDashboard }) {
               <AnimatedReportCard key={`${area.area}-${index}`} index={index + 4} style={{ padding: 26 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
                   <div style={{ fontSize: 18, fontWeight: 600, color: "#24304B", letterSpacing: "-0.04em" }}>{area.area}</div>
-                  <div style={{ fontSize: 18, fontWeight: 600, color }}>{area.score.toFixed(1)}</div>
+                  <AnimatedScore value={area.score} style={{ fontSize: 18, fontWeight: 600, color }} />
                 </div>
                 <ProgressBar score={area.score} color={color} />
                 <div style={{ marginTop: 22, fontSize: 13, lineHeight: 1.75, color: "#4B5B79" }}>{area.description}</div>
@@ -503,6 +1060,8 @@ function FullResultsReport({ result, onReset, onDashboard }) {
 
         <div
           style={{
+            position: "relative",
+            zIndex: 40,
             background: "linear-gradient(135deg, #25235E 0%, #2D2A6F 44%, #4239A1 100%)",
             borderRadius: 20,
             padding: "24px 24px 20px",
@@ -536,6 +1095,8 @@ function FullResultsReport({ result, onReset, onDashboard }) {
             ))}
           </div>
         </div>
+
+        <ProductsSection />
 
         {onDashboard ? (
           <button

@@ -9,6 +9,7 @@ import SignupModal     from "./components/SignupModal.jsx";
 import Dashboard      from "./components/Dashboard.jsx";
 import { supabase }    from "./supabase.js";
 import OzenResult from "../../image/Logo blue transparent 8.svg";
+import { COUNTRY_CURRENCIES } from "./locationData.js";
 
 
 const REQUIRE_SIGNUP = true;
@@ -198,8 +199,8 @@ function mapAnswersToForm(answers) {
   if (sleepHours < 0) sleepHours += 24;
 
   const genderMap = { "Male": "m", "Female": "f" };
-  const uaeCities = ["Abu Dhabi", "Dubai", "Sharjah", "Doha", "Riyadh", "Jeddah"];
-  const currency  = uaeCities.includes(answers.climate) ? "aed" : "inr";
+  const countryCode = answers.locationCountryCode || "AE";
+  const currencyCode = COUNTRY_CURRENCIES[countryCode]?.code || "AED";
 
   return {
     // identity
@@ -224,8 +225,8 @@ function mapAnswersToForm(answers) {
     hair_type:            answers.hairType || "Straight",
     hair_texture:         answers.hairTexture || "Medium",
     // budget & fitness
-    monthly_budget:       answers.budget || "AED 200–500",
-    currency:             currency,
+    monthly_budget:       answers.budget || `Under ${currencyCode} 200`,
+    currency:             currencyCode.toLowerCase(),
     gym_fitness:          answers.fitness || "Not training",
     // sleep
     sleep_bed:            answers.sleep?.bed || "23:00",
